@@ -1,0 +1,126 @@
+baseURL = "https://dustinwaldron.github.io/"
+# baseUrl = "http://localhost:1313"
+relativeURLs = true
+languageCode = 'en-us'
+title = 'Dustin Waldron'
+theme = ["PaperMod"]
+enableEmoji = true
+
+# [caches]
+#   [caches.images]
+#     dir = ':cacheDir/images'
+
+[pagination]
+  pagerSize = 10
+
+[outputs]
+  home = ["HTML", "RSS", "JSON", "RobotsTXT"]
+
+[taxonomies]
+  category = "categories"
+  tag = "tags"
+
+[markup]
+  [markup.highlight]
+    noClasses = false 
+    style = "github-dark"
+[params]
+  customCSS = ["css/custom.css"]
+  title = "Dustin Waldron Blog"
+  DateFormat = "January 2, 2006"
+  disableThemeToggle = true
+  description = "A personal portfolio of tech ramblings, pet projects, and overly stimulated opinions"
+  ShowReadingTime = true
+  ShowToc = true
+  UseHugoToc = true
+  tocopen = true
+  disableScrollToTop = false
+  Search = true
+  search = true
+  socialIcons = [
+    { name = "github", url = "https://github.com/dustinwaldron" },
+    { name = "linkedin", url = "https://linkedin.com/in/dustin-waldron-88430358" },
+    { name = "instagram", url = "https://instagram.com/dustydubz" }
+  ]
+
+  [params.fuseOpts]
+    isCaseSensitive = false
+    shouldSort = true
+    location = 0
+    distance = 1000
+    threshold = 0.4
+    minMatchCharLength = 0
+    limit = 10
+    keys = ["title", "content", "summary", "permalink"]
+
+  [params.assets]
+    css = ["css/syntax.css"]
+    disableHLJS = false
+    favicon = "favicon.ico"
+    favicon16x16 = "favicon.ico"
+    favicon32x32 = "favicon.ico"
+    apple_touch_icon = "favicon.ico"
+    safari_pinned_tab = "favicon.ico"
+
+[params.profileMode]
+  enabled = true
+  title = "Dustin Waldron"
+  subtitle = "Full-Stack Senior Staff Software Engineer"
+  imageUrl = "https://avatars.githubusercontent.com/u/2289434?v=4"    # optional
+  imageTitle = "Dustin Profile Picture"
+  imageWidth = 360
+  imageHeight = 360
+
+[module]
+
+[[module.mounts]]
+source = "english"
+target = "content"
+
+[[menu.main]]
+identifier = "about"
+name = "About"
+url = "about/"
+weight = 10
+
+[[menu.main]]
+identifier = "Posts"
+name = "Posts"
+url = "posts/"
+weight = 20
+
+[[menu.main]]
+identifier = "projects"
+name = "Projects"
+url = "projects/"
+weight = 30
+
+[[menu.main]]
+identifier = "search"
+name = "Search"
+url = "search/"
+weight = 40
+
+[[menu.main]]
+identifier = "categories"
+name = "Categories"
+url = "categories/"
+weight = 50
+
+[[menu.main]]
+identifier = "tags"
+name = "Tags"
+url = "tags/"
+weight = 60
+
+[sitemap]
+  changefreq = "monthly"
+  priority = 0.5
+  filename = "sitemap.xml"
+
+[outputFormats.RobotsTXT]
+mediaType = "text/plain"
+baseName = "robots"
+isPlainText = true
+notAlternative = true
+permalinkable = false
