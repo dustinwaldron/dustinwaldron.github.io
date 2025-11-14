@@ -7,17 +7,19 @@ on:
 
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  deploy:
-    runs-on: ubuntu-24.04
+  build:
+    runs-on: ubuntu-latest
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
     - uses: actions/checkout@v4
       with:
-        submodules: false # Fetch Hugo themes (true OR recursive)
+        submodules: recursive # Fetch Hugo themes (true OR recursive)
         fetch-depth: 0 # Fetch all history for .GitInfo and .Lastmod
 
     - name: Setup Hugo
@@ -26,12 +28,35 @@ jobs:
         hugo-version: '0.147.9'
         extended: true
 
-    - name: Build
-      run: hugo --minify
-
-    - name: Deploy
-      uses: peaceiris/actions-gh-pages@v3
-      if: github.ref == 'refs/heads/main'
+    - name: Cache restore
+      id: cache-restore
+      uses: actions/cache/restore@v4
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./public
+        path: ${{ runner.temp }}/hugo_cache
+        key: hugo-${{ github.run_id }}
+        restore-keys: hugo-
+
+    - name: Build
+      run: hugo \ --gc \ --minify \ --baseURL "${{ steps.pages.outputs.base_url }}/" \ --cacheDir "${{ runner.temp }}/hugo_cache"
+
+    - name: Cache save
+      id: cache-save
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ runner.temp }}/hugo_cache
+        key: ${{ steps.cache-restore.outputs.cache-primary-key }}
+
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./public
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

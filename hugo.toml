@@ -6,9 +6,9 @@ title = 'Dustin Waldron'
 theme = ["PaperMod"]
 enableEmoji = true
 
-# [caches]
-#   [caches.images]
-#     dir = ':cacheDir/images'
+[caches]
+  [caches.images]
+    dir = ':cacheDir/images'
 
 [pagination]
   pagerSize = 10
