@@ -26,6 +26,18 @@
         {{- block "main" . }}{{ end }}
     </main>
     {{ partialCached "footer.html" . .Layout .Kind (.Param "hideFooter") (.Param "ShowCodeCopyButtons") -}}
+    {{ if .Store.Get "hasMermaid" }}
+        <script type="module">
+            var theme = 'neutral';
+            if (localStorage.getItem("pref-theme") == "dark") {
+                theme = 'dark'
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                theme = 'dark'
+            }
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs';
+            mermaid.initialize({ startOnLoad: true, 'theme': theme, });
+        </script>
+    {{ end }}
 </body>
 
 </html>

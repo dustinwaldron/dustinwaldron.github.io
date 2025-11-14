@@ -66,14 +66,6 @@
         document.querySelector("html").dataset.theme = 'light';
     }
 
-</script><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs" type="module"></script>
-<script type="module">
-  import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";
-
-  mermaid.initialize({
-    startOnLoad: true,
-    theme: "default",   
-  });
 </script>
 </head>
 <body id="top">
@@ -164,7 +156,8 @@
 <li>The database was a flat json file that was basically the same schema as the PokeAPI contract</li>
 <li>The database was populated by a batch job that fetched the first generation of pokemon</li>
 </ol>
-<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">flowchart TD
+<pre class="mermaid">
+  flowchart TD
 
     UI[&#34;React Pokedex UI&#34;]
     API[&#34;Node.js Pokemon API&#34;]
@@ -174,7 +167,8 @@
     UI --&gt; API
     API --&gt; DB
     BATCH --&gt; DB
-</code></pre><p>Since then, there have been many new frameworks and enhancements made in the javascript community that would put my code then to shame. So, in honor of it being nearly 10 years since I did this humble project, I&rsquo;ve decided to recreate this nostalgic Pokedex app!</p>
+</pre>
+<p>Since then, there have been many new frameworks and enhancements made in the javascript community that would put my code then to shame. So, in honor of it being nearly 10 years since I did this humble project, I&rsquo;ve decided to recreate this nostalgic Pokedex app!</p>
 <h2 id="application-design">Application Design<a hidden class="anchor" aria-hidden="true" href="#application-design">#</a></h2>
 <h3 id="frontend">Frontend<a hidden class="anchor" aria-hidden="true" href="#frontend">#</a></h3>
 <p>For the UI, I&rsquo;ll continue to use React but this time leverage the <a href="https://nextjs.org/">NextJS</a> framework.</p>
@@ -264,6 +258,18 @@
     };
 
 </script>
+
+        <script type="module">
+            var theme = 'neutral';
+            if (localStorage.getItem("pref-theme") == "dark") {
+                theme = 'dark'
+            } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                theme = 'dark'
+            }
+            import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.esm.min.mjs';
+            mermaid.initialize({ startOnLoad: true, 'theme': theme, });
+        </script>
+    
 </body>
 
 </html>
