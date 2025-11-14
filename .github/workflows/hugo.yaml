@@ -37,7 +37,7 @@ jobs:
         restore-keys: hugo-
 
     - name: Build
-      run: hugo \ --gc \ --minify \ --baseURL "https://dustinwaldron.github.io/" \ --cacheDir "${{ runner.temp }}/hugo_cache"
+      run: hugo --minify --baseURL "https://dustinwaldron.github.io/" --cacheDir "${{ runner.temp }}/hugo_cache"
 
     - name: Cache save
       id: cache-save
