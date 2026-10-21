@@ -6,6 +6,9 @@ title = 'Dustin Waldron'
 theme = ["PaperMod"]
 enableEmoji = true
 
+[author]
+  name = "Dustin Waldron"
+
 [caches]
   [caches.images]
     dir = ':cacheDir/images'
@@ -42,9 +45,6 @@ enableEmoji = true
     { name = "linkedin", url = "https://linkedin.com/in/dustin-waldron-88430358" },
     { name = "instagram", url = "https://instagram.com/dustydubz" }
   ]
-
-  [params.author]
-    name = "Dustin Waldron"
 
   [params.fuseOpts]
     isCaseSensitive = false
