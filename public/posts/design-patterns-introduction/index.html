@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A principal-engineer view of why design patterns matter, a summary of the Gang of Four book, and how SOLID principles connect to practical Java design.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-introduction/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-introduction/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-introduction/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth">
+  <meta property="og:description" content="A principal-engineer view of why design patterns matter, a summary of the Gang of Four book, and how SOLID principles connect to practical Java design.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-11-01T11:00:00-04:00">
+    <meta property="article:modified_time" content="2025-11-01T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth">
+<meta name="twitter:description" content="A principal-engineer view of why design patterns matter, a summary of the Gang of Four book, and how SOLID principles connect to practical Java design.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-introduction/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth",
+  "name": "Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth",
+  "description": "A principal-engineer view of why design patterns matter, a summary of the Gang of Four book, and how SOLID principles connect to practical Java design.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "Design Patterns Are Not a Fancy Acronym. They Are a Professional Discipline. When I review code, the difference between a team that is shipping features and a team that is building durable systems is usually not raw intelligence. It is the discipline of design.\nThe best engineering teams do not treat design as a luxury. They treat it as a force multiplier.\nDesign patterns are one of the clearest expressions of that discipline. They are not “pattern matching” for the sake of aesthetics. They are battle-tested ways to structure code so that software is easier to understand, easier to extend, and less likely to collapse under the weight of change.\nIn enterprise Java systems, where requirements evolve, integrations multiply, and technical debt accumulates quietly over time, patterns matter even more. A team that understands design patterns usually writes software that is more coherent, easier to test, and less likely to require a rewrite after the second or third major release.\nThe real question is not whether you know the names of the patterns. The question is whether you know when to apply them and whether you can apply them without over-engineering.\nThat is the difference between a clever engineer and a principal engineer.\nWhy Design Patterns Matter in Software Engineering Software engineering is fundamentally about managing complexity.\nEvery system starts with a clean idea and a plausible code path. Then real life arrives: new requirements, changing data sources, regulatory constraints, third-party APIs, performance problems, and the inevitable pressure to patch quickly. That is when complexity becomes the real adversary.\nDesign patterns help by giving us a vocabulary for recurring problems.\nInstead of every developer inventing a custom solution from scratch, a mature team can say:\n“This is a strategy problem.” “This is a factory problem.” “This is a decorator problem.” “This is an observer problem.” That shared language reduces ambiguity. It also helps teams avoid the anti-pattern of doing everything ad hoc and then pretending the lack of structure is a feature.\nA pattern is valuable when it does three things well:\nIt makes intent explicit. It reduces accidental complexity. It supports extensibility without destroying cohesion. Consider a common enterprise scenario: payment processing. If every service in the system calculates fees, builds different gateway clients, and directly couples to vendor classes, the code will become brittle. When a new payment method arrives, the team will edit three or four unrelated classes and the risk of bugs goes up dramatically.\nThat is exactly the kind of problem design patterns are designed to solve.\nThe Gang of Four: The Foundation of Modern Object-Oriented Design The book most engineers mean when they say “design patterns” is Design Patterns: Elements of Reusable Object-Oriented Software, published in 1994 by Erich Gamma, Richard Helm, Ralph Johnson, and John Vlissides — collectively known as the Gang of Four, or GoF.\nThe book changed software engineering by codifying what experienced designers already knew: many object-oriented problems recur, and reusable solutions can be captured and taught.\nThe GoF did not invent the idea of design patterns in the abstract, but they gave the practice a common language and a durable framework. They organized patterns into three categories:\n1. Creational patterns These focus on object creation. They help decouple a system from the concrete classes it creates.\nTypical examples:\nFactory Method Abstract Factory Builder Singleton Prototype Why they matter:\nThey control how objects are created. They reduce coupling to constructors and concrete implementations. They make it easier to swap implementations without rewriting the system. 2. Structural patterns These explain how classes and objects compose to form larger structures.\nTypical examples:\nAdapter Bridge Composite Decorator Facade Flyweight Proxy Why they matter:\nThey help combine components in a stable way. They let systems evolve without forcing a redesign of the whole object graph. They isolate change behind well-defined boundaries. 3. Behavioral patterns These define communication and responsibility between objects.\nTypical examples:\nStrategy Observer Command Iterator State Template Method Visitor Why they matter:\nThey simplify interactions between collaborators. They help distribute responsibilities without producing a tangled object graph. They improve system flexibility when user behavior or workflow changes. The GoF’s core point is simple but powerful: software design is not only about data structures. It is also about the relationships between objects and the responsibilities those objects hold.\nThat is the real value of the book: it gives engineers a disciplined vocabulary for describing and solving recurring architecture problems.\nA Practical Summary of the GoF Book If I had to reduce the book to a single sentence, it would be this:\n“Design patterns are reusable object-oriented solutions to recurring design problems, expressed in terms of responsibilities, interactions, and trade-offs.”\nThis is important because patterns are not magical formulas. They are ways of thinking.\nThe GoF explicitly frames patterns in terms of:\nthe problem being solved, the context in which it arises, the participants involved, the consequences of the solution, and the trade-offs you accept. That last point matters more than most people realize. Every pattern makes some aspects of the system easier while making other things more complex. There is no free lunch in architecture.\nFor example:\nA Factory pattern hides construction details, but adds another layer of indirection. A Strategy pattern enables runtime flexibility, but requires a consistent interface across algorithms. A Decorator pattern keeps things open for extension, but can make debugging harder when many wrappers exist. A Singleton pattern is simple to reason about in some cases, but it often becomes a global variable in disguise. The GoF’s value is not that every pattern must be used everywhere. Their value is that they give you a mental model for recognizing the right tool for the right problem.\nGood engineers do not memorize patterns. They understand the forces behind them.\nThe Relationship Between SOLID and Design Patterns If design patterns are the “how,” then SOLID is the “why.”\nSOLID is a set of five object-oriented design principles introduced by Robert C. Martin, and it maps directly to the realities that patterns address.\nThe five principles are:\nSingle Responsibility Principle (SRP) A class should have one reason to change.\nThis principle is the foundation of good cohesion. If a class owns too many responsibilities, it becomes a fragile dependency magnet.\nA classic sign of SRP violation is a service that handles validation, persistence, workflow orchestration, and email notifications all in one class.\npublic class OrderService { public void placeOrder(Order order) { validate(order); save(order); sendConfirmationEmail(order); publishOrderCreatedEvent(order); } private void validate(Order order) { } private void save(Order order) { } private void sendConfirmationEmail(Order order) { } private void publishOrderCreatedEvent(Order order) { } } This class has multiple reasons to change. If email rules change, if persistence changes, or if the order validation model changes, this one class has to be reopened repeatedly.\nA more disciplined design splits responsibilities across components.\npublic class OrderService { private final OrderValidator validator; private final OrderRepository repository; private final OrderNotifier notifier; public OrderService(OrderValidator validator, OrderRepository repository, OrderNotifier notifier) { this.validator = validator; this.repository = repository; this.notifier = notifier; } public void placeOrder(Order order) { validator.validate(order); repository.save(order); notifier.sendConfirmation(order); } } This is not just cleaner code. It is more stable code.\nOpen/Closed Principle (OCP) Software entities should be open for extension and closed for modification.\nThis is one of the most important ideas behind patterns like Strategy, Decorator, and Factory. You want to add behavior by introducing new types, not by changing old code in place.\npublic interface ShippingStrategy { double calculateCost(Order order); } public class GroundShipping implements ShippingStrategy { @Override public double calculateCost(Order order) { return 12.00; } } public class ExpressShipping implements ShippingStrategy { @Override public double calculateCost(Order order) { return 25.00; } } Now the shipping logic can vary without rewriting the order flow:\npublic class OrderService { private final ShippingStrategy shippingStrategy; public OrderService(ShippingStrategy shippingStrategy) { this.shippingStrategy = shippingStrategy; } public double calculateTotal(Order order) { return order.getSubtotal() + shippingStrategy.calculateCost(order); } } This is an example of the Strategy pattern in action. The behavior is extended by new implementations, not by modifying the order service itself.\nLiskov Substitution Principle (LSP) Subtypes must be substitutable for their base types without breaking the system.\nThis principle matters whenever we rely on polymorphism. If a subtype violates the expectations of the parent type, the design becomes brittle and surprising.\nA classic violation would be using a Square that breaks Rectangle expectations, or a PaymentGateway implementation that throws on refund() because it was only designed for charges.\npublic interface PaymentGateway { void charge(BigDecimal amount); void refund(BigDecimal amount); } public class StripeGateway implements PaymentGateway { @Override public void charge(BigDecimal amount) { // charge with Stripe API } @Override public void refund(BigDecimal amount) { // refund with Stripe API } } If a different implementation is added, it should honor the same contract. If it cannot, the abstraction is wrong or too broad.\nInterface Segregation Principle (ISP) Clients should not be forced to depend on interfaces they do not use.\nThis leads to small, focused interfaces instead of one “god” interface with dozens of methods.\npublic interface UserRepository { User findById(String id); void save(User user); } public interface AuditRepository { void recordAudit(AuditEvent event); } Rather than a single bloated interface like UserService and AuditService combined, the design keeps contracts specialized. This reduces coupling and makes implementation easier to maintain.\nDependency Inversion Principle (DIP) Depend on abstractions, not concretions.\nThis principle is critical for enterprise Java systems and is deeply connected to design patterns like Factory, Dependency Injection, and Strategy.\npublic interface NotificationSender { void send(String message); } public class EmailNotificationSender implements NotificationSender { @Override public void send(String message) { System.out.println(\"Sending email: \" + message); } } Then the client depends on the abstraction:\npublic class AccountService { private final NotificationSender notificationSender; public AccountService(NotificationSender notificationSender) { this.notificationSender = notificationSender; } public void register(String email) { // business logic notificationSender.send(\"Welcome!\"); } } This is a cleaner design because the service is not hardwired to a specific email provider or implementation detail.\nHow SOLID Relates to Design Patterns The easiest way to think about this is:\nSOLID gives you the principles. Design patterns give you the application of those principles in recurring situations. The relationship is not accidental. Patterns often emerge because a team is trying to satisfy one or more SOLID goals.\nTake Strategy as an example.\nThe goal is to keep behavior extensible and avoid hardcoding logic into a central class. That aligns directly with OCP and DIP. The pattern is the structural expression of those principles in a reusable form.\nSimilarly:\nFactory and Abstract Factory are solutions to construction problems that reduce direct dependency on concrete classes. Decorator is a natural expression of OCP: extend behavior without changing the original type. Observer is a way to manage change propagation while keeping coupling manageable. Facade simplifies a complex system and clarifies boundaries, helping reduce SRP violations from a consumer’s perspective. Adapter helps integrate incompatible interfaces without redesigning the world. A simple rule of thumb:\nIf SOLID is the architectural compass, design patterns are the map. They guide implementation choices without replacing judgment.\nThis is where many engineers stumble: they confuse “knowing patterns” with “designing well.” A pattern is not a substitute for thinking. It is a tool to avoid poor thinking.\nA Principal Engineer’s View: Patterns Are a Language, Not a Religion I have seen teams over-apply patterns. They create abstract factories for everything, decorate every object, and turn a simple service into a cathedral of indirection.\nThat is not engineering. That is cargo cult design.\nThe right standard is not “Do I know a pattern for this?” The right standard is “Does this design reduce uncertainty and clarify intent in a way that helps the next engineer safely evolve the code?”\nThat is the principal-engineer mindset.\nThe best use of design patterns is selective and pragmatic:\nUse them where the problem is recurring and the cost of a custom solution is high. Keep the abstraction honest and narrow. Prefer clear behavior over theoretical elegance. Favor simplicity until complexity demonstrates it is necessary. A good design does not impress by showing off. It demonstrates restraint, clarity, and resilience under change.\nThat is why the GoF patterns endure. They are not just intellectual curiosities. They are practical, repeatable solutions to ordinary engineering problems.\nAnd their value is multiplied when they are grounded in SOLID principles. Patterns without principles become decorative. Principles without patterns become vague philosophy. Together, they form a disciplined approach to building software that can evolve without falling apart.\nFinal Thoughts Design patterns matter because software engineering is not just about writing code that works once. It is about writing code that remains understandable, flexible, and correct as the system grows.\nThe Gang of Four distilled the experience of generations of software designers into a toolkit for recurring problems. SOLID principles gave us the underlying guidance for keeping systems coherent and maintainable. Together, they define how thoughtful engineers create software that scales beyond the original sprint.\nIf you are building in Java, the practical takeaway is straightforward:\nNotice the recurring design problems. Choose the right pattern for the forces at play. Keep the design aligned with SOLID principles. Refactor toward clarity, not complexity. That is how we move from writing code to engineering systems.\nAnd that is the difference between building features and building software that lasts.\n",
+  "wordCount" : "2213",
+  "inLanguage": "en",
+  "datePublished": "2025-11-01T11:00:00-04:00",
+  "dateModified": "2025-11-01T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-introduction/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth
+    </h1>
+    <div class="post-description">
+      A principal-engineer view of why design patterns matter, a summary of the Gang of Four book, and how SOLID principles connect to practical Java design.
+    </div>
+    <div class="post-meta"><span title='2025-11-01 11:00:00 -0400 EDT'>November 1, 2025</span>&nbsp;·&nbsp;<span>11 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#design-patterns-are-not-a-fancy-acronym-they-are-a-professional-discipline">Design Patterns Are Not a Fancy Acronym. They Are a Professional Discipline.</a></li>
+    <li><a href="#why-design-patterns-matter-in-software-engineering">Why Design Patterns Matter in Software Engineering</a></li>
+    <li><a href="#the-gang-of-four-the-foundation-of-modern-object-oriented-design">The Gang of Four: The Foundation of Modern Object-Oriented Design</a>
+      <ul>
+        <li><a href="#1-creational-patterns">1. Creational patterns</a></li>
+        <li><a href="#2-structural-patterns">2. Structural patterns</a></li>
+        <li><a href="#3-behavioral-patterns">3. Behavioral patterns</a></li>
+      </ul>
+    </li>
+    <li><a href="#a-practical-summary-of-the-gof-book">A Practical Summary of the GoF Book</a></li>
+    <li><a href="#the-relationship-between-solid-and-design-patterns">The Relationship Between SOLID and Design Patterns</a>
+      <ul>
+        <li><a href="#single-responsibility-principle-srp">Single Responsibility Principle (SRP)</a></li>
+        <li><a href="#openclosed-principle-ocp">Open/Closed Principle (OCP)</a></li>
+        <li><a href="#liskov-substitution-principle-lsp">Liskov Substitution Principle (LSP)</a></li>
+        <li><a href="#interface-segregation-principle-isp">Interface Segregation Principle (ISP)</a></li>
+        <li><a href="#dependency-inversion-principle-dip">Dependency Inversion Principle (DIP)</a></li>
+      </ul>
+    </li>
+    <li><a href="#how-solid-relates-to-design-patterns">How SOLID Relates to Design Patterns</a></li>
+    <li><a href="#a-principal-engineers-view-patterns-are-a-language-not-a-religion">A Principal Engineer’s View: Patterns Are a Language, Not a Religion</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="design-patterns-are-not-a-fancy-acronym-they-are-a-professional-discipline">Design Patterns Are Not a Fancy Acronym. They Are a Professional Discipline.<a hidden class="anchor" aria-hidden="true" href="#design-patterns-are-not-a-fancy-acronym-they-are-a-professional-discipline">#</a></h2>
+<p>When I review code, the difference between a team that is shipping features and a team that is building durable systems is usually not raw intelligence. It is the discipline of design.</p>
+<p>The best engineering teams do not treat design as a luxury. They treat it as a force multiplier.</p>
+<p>Design patterns are one of the clearest expressions of that discipline. They are not “pattern matching” for the sake of aesthetics. They are battle-tested ways to structure code so that software is easier to understand, easier to extend, and less likely to collapse under the weight of change.</p>
+<p>In enterprise Java systems, where requirements evolve, integrations multiply, and technical debt accumulates quietly over time, patterns matter even more. A team that understands design patterns usually writes software that is more coherent, easier to test, and less likely to require a rewrite after the second or third major release.</p>
+<p>The real question is not whether you know the names of the patterns. The question is whether you know when to apply them and whether you can apply them without over-engineering.</p>
+<p>That is the difference between a clever engineer and a principal engineer.</p>
+<hr>
+<h2 id="why-design-patterns-matter-in-software-engineering">Why Design Patterns Matter in Software Engineering<a hidden class="anchor" aria-hidden="true" href="#why-design-patterns-matter-in-software-engineering">#</a></h2>
+<p>Software engineering is fundamentally about managing complexity.</p>
+<p>Every system starts with a clean idea and a plausible code path. Then real life arrives: new requirements, changing data sources, regulatory constraints, third-party APIs, performance problems, and the inevitable pressure to patch quickly. That is when complexity becomes the real adversary.</p>
+<p>Design patterns help by giving us a vocabulary for recurring problems.</p>
+<p>Instead of every developer inventing a custom solution from scratch, a mature team can say:</p>
+<ul>
+<li>“This is a strategy problem.”</li>
+<li>“This is a factory problem.”</li>
+<li>“This is a decorator problem.”</li>
+<li>“This is an observer problem.”</li>
+</ul>
+<p>That shared language reduces ambiguity. It also helps teams avoid the anti-pattern of doing everything ad hoc and then pretending the lack of structure is a feature.</p>
+<p>A pattern is valuable when it does three things well:</p>
+<ol>
+<li>It makes intent explicit.</li>
+<li>It reduces accidental complexity.</li>
+<li>It supports extensibility without destroying cohesion.</li>
+</ol>
+<p>Consider a common enterprise scenario: payment processing. If every service in the system calculates fees, builds different gateway clients, and directly couples to vendor classes, the code will become brittle. When a new payment method arrives, the team will edit three or four unrelated classes and the risk of bugs goes up dramatically.</p>
+<p>That is exactly the kind of problem design patterns are designed to solve.</p>
+<hr>
+<h2 id="the-gang-of-four-the-foundation-of-modern-object-oriented-design">The Gang of Four: The Foundation of Modern Object-Oriented Design<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-the-foundation-of-modern-object-oriented-design">#</a></h2>
+<p>The book most engineers mean when they say “design patterns” is Design Patterns: Elements of Reusable Object-Oriented Software, published in 1994 by Erich Gamma, Richard Helm, Ralph Johnson, and John Vlissides — collectively known as the Gang of Four, or GoF.</p>
+<p>The book changed software engineering by codifying what experienced designers already knew: many object-oriented problems recur, and reusable solutions can be captured and taught.</p>
+<p>The GoF did not invent the idea of design patterns in the abstract, but they gave the practice a common language and a durable framework. They organized patterns into three categories:</p>
+<h3 id="1-creational-patterns">1. Creational patterns<a hidden class="anchor" aria-hidden="true" href="#1-creational-patterns">#</a></h3>
+<p>These focus on object creation. They help decouple a system from the concrete classes it creates.</p>
+<p>Typical examples:</p>
+<ul>
+<li>Factory Method</li>
+<li>Abstract Factory</li>
+<li>Builder</li>
+<li>Singleton</li>
+<li>Prototype</li>
+</ul>
+<p>Why they matter:</p>
+<ul>
+<li>They control how objects are created.</li>
+<li>They reduce coupling to constructors and concrete implementations.</li>
+<li>They make it easier to swap implementations without rewriting the system.</li>
+</ul>
+<h3 id="2-structural-patterns">2. Structural patterns<a hidden class="anchor" aria-hidden="true" href="#2-structural-patterns">#</a></h3>
+<p>These explain how classes and objects compose to form larger structures.</p>
+<p>Typical examples:</p>
+<ul>
+<li>Adapter</li>
+<li>Bridge</li>
+<li>Composite</li>
+<li>Decorator</li>
+<li>Facade</li>
+<li>Flyweight</li>
+<li>Proxy</li>
+</ul>
+<p>Why they matter:</p>
+<ul>
+<li>They help combine components in a stable way.</li>
+<li>They let systems evolve without forcing a redesign of the whole object graph.</li>
+<li>They isolate change behind well-defined boundaries.</li>
+</ul>
+<h3 id="3-behavioral-patterns">3. Behavioral patterns<a hidden class="anchor" aria-hidden="true" href="#3-behavioral-patterns">#</a></h3>
+<p>These define communication and responsibility between objects.</p>
+<p>Typical examples:</p>
+<ul>
+<li>Strategy</li>
+<li>Observer</li>
+<li>Command</li>
+<li>Iterator</li>
+<li>State</li>
+<li>Template Method</li>
+<li>Visitor</li>
+</ul>
+<p>Why they matter:</p>
+<ul>
+<li>They simplify interactions between collaborators.</li>
+<li>They help distribute responsibilities without producing a tangled object graph.</li>
+<li>They improve system flexibility when user behavior or workflow changes.</li>
+</ul>
+<p>The GoF’s core point is simple but powerful: software design is not only about data structures. It is also about the relationships between objects and the responsibilities those objects hold.</p>
+<p>That is the real value of the book: it gives engineers a disciplined vocabulary for describing and solving recurring architecture problems.</p>
+<hr>
+<h2 id="a-practical-summary-of-the-gof-book">A Practical Summary of the GoF Book<a hidden class="anchor" aria-hidden="true" href="#a-practical-summary-of-the-gof-book">#</a></h2>
+<p>If I had to reduce the book to a single sentence, it would be this:</p>
+<p>“Design patterns are reusable object-oriented solutions to recurring design problems, expressed in terms of responsibilities, interactions, and trade-offs.”</p>
+<p>This is important because patterns are not magical formulas. They are ways of thinking.</p>
+<p>The GoF explicitly frames patterns in terms of:</p>
+<ul>
+<li>the problem being solved,</li>
+<li>the context in which it arises,</li>
+<li>the participants involved,</li>
+<li>the consequences of the solution,</li>
+<li>and the trade-offs you accept.</li>
+</ul>
+<p>That last point matters more than most people realize. Every pattern makes some aspects of the system easier while making other things more complex. There is no free lunch in architecture.</p>
+<p>For example:</p>
+<ul>
+<li>A Factory pattern hides construction details, but adds another layer of indirection.</li>
+<li>A Strategy pattern enables runtime flexibility, but requires a consistent interface across algorithms.</li>
+<li>A Decorator pattern keeps things open for extension, but can make debugging harder when many wrappers exist.</li>
+<li>A Singleton pattern is simple to reason about in some cases, but it often becomes a global variable in disguise.</li>
+</ul>
+<p>The GoF’s value is not that every pattern must be used everywhere. Their value is that they give you a mental model for recognizing the right tool for the right problem.</p>
+<p>Good engineers do not memorize patterns. They understand the forces behind them.</p>
+<hr>
+<h2 id="the-relationship-between-solid-and-design-patterns">The Relationship Between SOLID and Design Patterns<a hidden class="anchor" aria-hidden="true" href="#the-relationship-between-solid-and-design-patterns">#</a></h2>
+<p>If design patterns are the “how,” then SOLID is the “why.”</p>
+<p>SOLID is a set of five object-oriented design principles introduced by Robert C. Martin, and it maps directly to the realities that patterns address.</p>
+<p>The five principles are:</p>
+<h3 id="single-responsibility-principle-srp">Single Responsibility Principle (SRP)<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle-srp">#</a></h3>
+<p>A class should have one reason to change.</p>
+<p>This principle is the foundation of good cohesion. If a class owns too many responsibilities, it becomes a fragile dependency magnet.</p>
+<p>A classic sign of SRP violation is a service that handles validation, persistence, workflow orchestration, and email notifications all in one class.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">OrderService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">placeOrder</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">validate</span><span class="p">(</span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">save</span><span class="p">(</span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">sendConfirmationEmail</span><span class="p">(</span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">publishOrderCreatedEvent</span><span class="p">(</span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">validate</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">sendConfirmationEmail</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">publishOrderCreatedEvent</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This class has multiple reasons to change. If email rules change, if persistence changes, or if the order validation model changes, this one class has to be reopened repeatedly.</p>
+<p>A more disciplined design splits responsibilities across components.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">OrderService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">OrderValidator</span><span class="w"> </span><span class="n">validator</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">OrderRepository</span><span class="w"> </span><span class="n">repository</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">OrderNotifier</span><span class="w"> </span><span class="n">notifier</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">OrderService</span><span class="p">(</span><span class="n">OrderValidator</span><span class="w"> </span><span class="n">validator</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="n">OrderRepository</span><span class="w"> </span><span class="n">repository</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="n">OrderNotifier</span><span class="w"> </span><span class="n">notifier</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">validator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">validator</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">repository</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">repository</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">notifier</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notifier</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">placeOrder</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">validator</span><span class="p">.</span><span class="na">validate</span><span class="p">(</span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">repository</span><span class="p">.</span><span class="na">save</span><span class="p">(</span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">notifier</span><span class="p">.</span><span class="na">sendConfirmation</span><span class="p">(</span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This is not just cleaner code. It is more stable code.</p>
+<h3 id="openclosed-principle-ocp">Open/Closed Principle (OCP)<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle-ocp">#</a></h3>
+<p>Software entities should be open for extension and closed for modification.</p>
+<p>This is one of the most important ideas behind patterns like Strategy, Decorator, and Factory. You want to add behavior by introducing new types, not by changing old code in place.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">ShippingStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">double</span><span class="w"> </span><span class="nf">calculateCost</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">GroundShipping</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ShippingStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="nf">calculateCost</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">12</span><span class="p">.</span><span class="na">00</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">ExpressShipping</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ShippingStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="nf">calculateCost</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">25</span><span class="p">.</span><span class="na">00</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Now the shipping logic can vary without rewriting the order flow:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">OrderService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">ShippingStrategy</span><span class="w"> </span><span class="n">shippingStrategy</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">OrderService</span><span class="p">(</span><span class="n">ShippingStrategy</span><span class="w"> </span><span class="n">shippingStrategy</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">shippingStrategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">shippingStrategy</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="nf">calculateTotal</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">order</span><span class="p">.</span><span class="na">getSubtotal</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">shippingStrategy</span><span class="p">.</span><span class="na">calculateCost</span><span class="p">(</span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This is an example of the Strategy pattern in action. The behavior is extended by new implementations, not by modifying the order service itself.</p>
+<h3 id="liskov-substitution-principle-lsp">Liskov Substitution Principle (LSP)<a hidden class="anchor" aria-hidden="true" href="#liskov-substitution-principle-lsp">#</a></h3>
+<p>Subtypes must be substitutable for their base types without breaking the system.</p>
+<p>This principle matters whenever we rely on polymorphism. If a subtype violates the expectations of the parent type, the design becomes brittle and surprising.</p>
+<p>A classic violation would be using a <code>Square</code> that breaks <code>Rectangle</code> expectations, or a <code>PaymentGateway</code> implementation that throws on <code>refund()</code> because it was only designed for charges.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">PaymentGateway</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">charge</span><span class="p">(</span><span class="n">BigDecimal</span><span class="w"> </span><span class="n">amount</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">refund</span><span class="p">(</span><span class="n">BigDecimal</span><span class="w"> </span><span class="n">amount</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">StripeGateway</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">PaymentGateway</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">charge</span><span class="p">(</span><span class="n">BigDecimal</span><span class="w"> </span><span class="n">amount</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// charge with Stripe API</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">refund</span><span class="p">(</span><span class="n">BigDecimal</span><span class="w"> </span><span class="n">amount</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// refund with Stripe API</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>If a different implementation is added, it should honor the same contract. If it cannot, the abstraction is wrong or too broad.</p>
+<h3 id="interface-segregation-principle-isp">Interface Segregation Principle (ISP)<a hidden class="anchor" aria-hidden="true" href="#interface-segregation-principle-isp">#</a></h3>
+<p>Clients should not be forced to depend on interfaces they do not use.</p>
+<p>This leads to small, focused interfaces instead of one “god” interface with dozens of methods.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">UserRepository</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">User</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">id</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="n">User</span><span class="w"> </span><span class="n">user</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">AuditRepository</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">recordAudit</span><span class="p">(</span><span class="n">AuditEvent</span><span class="w"> </span><span class="n">event</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Rather than a single bloated interface like <code>UserService</code> and <code>AuditService</code> combined, the design keeps contracts specialized. This reduces coupling and makes implementation easier to maintain.</p>
+<h3 id="dependency-inversion-principle-dip">Dependency Inversion Principle (DIP)<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle-dip">#</a></h3>
+<p>Depend on abstractions, not concretions.</p>
+<p>This principle is critical for enterprise Java systems and is deeply connected to design patterns like Factory, Dependency Injection, and Strategy.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">NotificationSender</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">EmailNotificationSender</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">NotificationSender</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Sending email: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">message</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Then the client depends on the abstraction:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AccountService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">NotificationSender</span><span class="w"> </span><span class="n">notificationSender</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">AccountService</span><span class="p">(</span><span class="n">NotificationSender</span><span class="w"> </span><span class="n">notificationSender</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">notificationSender</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">notificationSender</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">email</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// business logic</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">notificationSender</span><span class="p">.</span><span class="na">send</span><span class="p">(</span><span class="s">&#34;Welcome!&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This is a cleaner design because the service is not hardwired to a specific email provider or implementation detail.</p>
+<hr>
+<h2 id="how-solid-relates-to-design-patterns">How SOLID Relates to Design Patterns<a hidden class="anchor" aria-hidden="true" href="#how-solid-relates-to-design-patterns">#</a></h2>
+<p>The easiest way to think about this is:</p>
+<ul>
+<li>SOLID gives you the principles.</li>
+<li>Design patterns give you the application of those principles in recurring situations.</li>
+</ul>
+<p>The relationship is not accidental. Patterns often emerge because a team is trying to satisfy one or more SOLID goals.</p>
+<p>Take Strategy as an example.</p>
+<p>The goal is to keep behavior extensible and avoid hardcoding logic into a central class. That aligns directly with OCP and DIP. The pattern is the structural expression of those principles in a reusable form.</p>
+<p>Similarly:</p>
+<ul>
+<li>Factory and Abstract Factory are solutions to construction problems that reduce direct dependency on concrete classes.</li>
+<li>Decorator is a natural expression of OCP: extend behavior without changing the original type.</li>
+<li>Observer is a way to manage change propagation while keeping coupling manageable.</li>
+<li>Facade simplifies a complex system and clarifies boundaries, helping reduce SRP violations from a consumer’s perspective.</li>
+<li>Adapter helps integrate incompatible interfaces without redesigning the world.</li>
+</ul>
+<p>A simple rule of thumb:</p>
+<ul>
+<li>If SOLID is the architectural compass, design patterns are the map.</li>
+</ul>
+<p>They guide implementation choices without replacing judgment.</p>
+<p>This is where many engineers stumble: they confuse “knowing patterns” with “designing well.” A pattern is not a substitute for thinking. It is a tool to avoid poor thinking.</p>
+<hr>
+<h2 id="a-principal-engineers-view-patterns-are-a-language-not-a-religion">A Principal Engineer’s View: Patterns Are a Language, Not a Religion<a hidden class="anchor" aria-hidden="true" href="#a-principal-engineers-view-patterns-are-a-language-not-a-religion">#</a></h2>
+<p>I have seen teams over-apply patterns. They create abstract factories for everything, decorate every object, and turn a simple service into a cathedral of indirection.</p>
+<p>That is not engineering. That is cargo cult design.</p>
+<p>The right standard is not “Do I know a pattern for this?” The right standard is “Does this design reduce uncertainty and clarify intent in a way that helps the next engineer safely evolve the code?”</p>
+<p>That is the principal-engineer mindset.</p>
+<p>The best use of design patterns is selective and pragmatic:</p>
+<ul>
+<li>Use them where the problem is recurring and the cost of a custom solution is high.</li>
+<li>Keep the abstraction honest and narrow.</li>
+<li>Prefer clear behavior over theoretical elegance.</li>
+<li>Favor simplicity until complexity demonstrates it is necessary.</li>
+</ul>
+<p>A good design does not impress by showing off. It demonstrates restraint, clarity, and resilience under change.</p>
+<p>That is why the GoF patterns endure. They are not just intellectual curiosities. They are practical, repeatable solutions to ordinary engineering problems.</p>
+<p>And their value is multiplied when they are grounded in SOLID principles. Patterns without principles become decorative. Principles without patterns become vague philosophy. Together, they form a disciplined approach to building software that can evolve without falling apart.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>Design patterns matter because software engineering is not just about writing code that works once. It is about writing code that remains understandable, flexible, and correct as the system grows.</p>
+<p>The Gang of Four distilled the experience of generations of software designers into a toolkit for recurring problems. SOLID principles gave us the underlying guidance for keeping systems coherent and maintainable. Together, they define how thoughtful engineers create software that scales beyond the original sprint.</p>
+<p>If you are building in Java, the practical takeaway is straightforward:</p>
+<ul>
+<li>Notice the recurring design problems.</li>
+<li>Choose the right pattern for the forces at play.</li>
+<li>Keep the design aligned with SOLID principles.</li>
+<li>Refactor toward clarity, not complexity.</li>
+</ul>
+<p>That is how we move from writing code to engineering systems.</p>
+<p>And that is the difference between building features and building software that lasts.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

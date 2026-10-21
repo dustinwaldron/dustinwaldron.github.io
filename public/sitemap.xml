@@ -2,80 +2,100 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/tags/blogging/</loc>
+    <loc>https://dustinwaldron.github.io/tags/architecture/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/engineering/</loc>
+    <loc>https://dustinwaldron.github.io/tags/best-practices/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/frontend/</loc>
+    <loc>https://dustinwaldron.github.io/tags/blogging/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/github/</loc>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-introduction/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/</loc>
+    <loc>https://dustinwaldron.github.io/tags/engineering/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/projects/nextjs-pokedex/</loc>
+    <loc>https://dustinwaldron.github.io/tags/frontend/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/nodejs/</loc>
+    <loc>https://dustinwaldron.github.io/tags/github/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/posts/</loc>
+    <loc>https://dustinwaldron.github.io/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/projects/</loc>
+    <loc>https://dustinwaldron.github.io/tags/java/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/react/</loc>
+    <loc>https://dustinwaldron.github.io/projects/nextjs-pokedex/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/</loc>
+    <loc>https://dustinwaldron.github.io/tags/nodejs/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/typescript/</loc>
+    <loc>https://dustinwaldron.github.io/posts/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/posts/why-i-started-a-tech-blog/</loc>
+    <loc>https://dustinwaldron.github.io/projects/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/about/</loc>
+    <loc>https://dustinwaldron.github.io/tags/react/</loc>
+    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>https://dustinwaldron.github.io/tags/</loc>
+    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/search/</loc>
+    <loc>https://dustinwaldron.github.io/tags/typescript/</loc>
+    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/</loc>
+    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/about/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/categories/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/search/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
