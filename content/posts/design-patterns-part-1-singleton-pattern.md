@@ -1,6 +1,6 @@
 ---
 title: "Design Patterns: Singleton Pattern - When One Instance Is the Right Design"
-date: "2025-10-21T11:00:00-04:00"
+date: "2026-10-21T11:00:00-04:00"
 description: "A practical look at the Singleton pattern in Java, including when it helps, when it hurts, and the safest implementation patterns for production code."
 tags:
   - architecture
