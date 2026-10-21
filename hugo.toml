@@ -43,6 +43,9 @@ enableEmoji = true
     { name = "instagram", url = "https://instagram.com/dustydubz" }
   ]
 
+  [params.author]
+    name = "Dustin Waldron"
+
   [params.fuseOpts]
     isCaseSensitive = false
     shouldSort = true

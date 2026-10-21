@@ -3,26 +3,46 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>https://dustinwaldron.github.io/tags/architecture/</loc>
-    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
+    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
     <loc>https://dustinwaldron.github.io/tags/best-practices/</loc>
-    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url><url>
-    <loc>https://dustinwaldron.github.io/tags/blogging/</loc>
-    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
+    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
     <loc>https://dustinwaldron.github.io/posts/design-patterns-introduction/</loc>
-    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
+    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
     <loc>https://dustinwaldron.github.io/tags/engineering/</loc>
+    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/</loc>
+    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/tags/java/</loc>
+    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/</loc>
+    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/tags/</loc>
+    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/tags/blogging/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
@@ -37,16 +57,6 @@
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://dustinwaldron.github.io/</loc>
-    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url><url>
-    <loc>https://dustinwaldron.github.io/tags/java/</loc>
-    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url><url>
     <loc>https://dustinwaldron.github.io/projects/nextjs-pokedex/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
@@ -57,22 +67,12 @@
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>https://dustinwaldron.github.io/posts/</loc>
-    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url><url>
     <loc>https://dustinwaldron.github.io/projects/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
     <loc>https://dustinwaldron.github.io/tags/react/</loc>
-    <lastmod>2025-11-01T11:00:00-04:00</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url><url>
-    <loc>https://dustinwaldron.github.io/tags/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>

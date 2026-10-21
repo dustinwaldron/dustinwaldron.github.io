@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Java on Dustin Waldron</title>
+    <link>https://dustinwaldron.github.io/tags/java/</link>
+    <description>Recent content in Java on Dustin Waldron</description>
+    <generator>Hugo -- 0.158.0</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 20 Oct 2026 13:00:00 -0400</lastBuildDate>
+    <atom:link href="https://dustinwaldron.github.io/tags/java/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-introduction/</link>
+      <pubDate>Tue, 20 Oct 2026 13:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-introduction/</guid>
+      <description>A principal-engineer view of why design patterns matter, a summary of the Gang of Four book, and how SOLID principles connect to practical Java design.</description>
+    </item>
+  </channel>
+</rss>
