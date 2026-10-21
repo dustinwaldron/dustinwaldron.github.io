@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Design Patterns: Singleton Pattern - When One Instance Is the Right Design | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical look at the Singleton pattern in Java, including when it helps, when it hurts, and the safest implementation patterns for production code.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/design-patterns-part-1-singleton-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/favicon.ico">
+<link rel="mask-icon" href="http://localhost:1313/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/design-patterns-part-1-singleton-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Singleton Pattern - When One Instance Is the Right Design
+    </h1>
+    <div class="post-description">
+      A practical look at the Singleton pattern in Java, including when it helps, when it hurts, and the safest implementation patterns for production code.
+    </div>
+    <div class="post-meta"><span title='2026-10-02 11:00:00 -0400 EDT'>October 2, 2026</span>&nbsp;·&nbsp;<span>8 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-singleton-pattern-is-simple-but-not-innocent">The Singleton Pattern Is Simple, But Not Innocent</a></li>
+    <li><a href="#what-the-singleton-pattern-is-trying-to-solve">What the Singleton Pattern Is Trying to Solve</a></li>
+    <li><a href="#the-classical-gang-of-four-intent">The Classical Gang of Four Intent</a></li>
+    <li><a href="#a-simple-java-example-eager-initialization">A Simple Java Example: Eager Initialization</a></li>
+    <li><a href="#lazy-initialization">Lazy Initialization</a></li>
+    <li><a href="#double-checked-locking">Double-Checked Locking</a></li>
+    <li><a href="#the-best-java-idiom-initialization-on-demand-holder">The Best Java Idiom: Initialization-on-Demand Holder</a></li>
+    <li><a href="#when-a-singleton-makes-sense">When a Singleton Makes Sense</a></li>
+    <li><a href="#when-the-singleton-pattern-becomes-a-problem">When the Singleton Pattern Becomes a Problem</a>
+      <ul>
+        <li><a href="#1-it-hides-dependencies">1. It hides dependencies</a></li>
+        <li><a href="#2-it-makes-unit-testing-harder">2. It makes unit testing harder</a></li>
+        <li><a href="#3-it-creates-global-coupling">3. It creates global coupling</a></li>
+        <li><a href="#4-it-can-become-a-concurrency-bottleneck">4. It can become a concurrency bottleneck</a></li>
+      </ul>
+    </li>
+    <li><a href="#a-better-alternative-in-many-cases-dependency-injection">A Better Alternative in Many Cases: Dependency Injection</a></li>
+    <li><a href="#the-enum-singleton-in-java">The Enum Singleton in Java</a></li>
+    <li><a href="#practical-guidance-for-real-teams">Practical Guidance for Real Teams</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-singleton-pattern-is-simple-but-not-innocent">The Singleton Pattern Is Simple, But Not Innocent<a hidden class="anchor" aria-hidden="true" href="#the-singleton-pattern-is-simple-but-not-innocent">#</a></h2>
+<p>The Singleton pattern is one of the most recognizable design patterns in object-oriented programming, and also one of the most misunderstood.</p>
+<p>At its core, the Singleton pattern guarantees that a class has exactly one instance and provides a global access point to it. In Java, this is usually used for runtime configuration, shared caches, thread pools, logging, or application-wide coordination.</p>
+<p>Sounds straightforward, right?</p>
+<p>The problem is that “single instance” is often treated as a solution in search of a problem. In real systems, global state is a trade-off. It is convenient, but it often introduces hidden coupling, makes testing harder, and can become an accidental bottleneck when the system grows.</p>
+<p>The Singleton pattern is useful when it represents a true application-level concept, not when it is used as a shortcut to avoid passing dependencies around.</p>
+<p>That distinction matters.</p>
+<hr>
+<h2 id="what-the-singleton-pattern-is-trying-to-solve">What the Singleton Pattern Is Trying to Solve<a hidden class="anchor" aria-hidden="true" href="#what-the-singleton-pattern-is-trying-to-solve">#</a></h2>
+<p>The Singleton pattern addresses a specific problem: some objects should exist only once in a running environment because the system depends on a single source of truth.</p>
+<p>Examples:</p>
+<ul>
+<li>a configuration manager</li>
+<li>a process-wide logger</li>
+<li>a shared connection factory</li>
+<li>a registry of application services</li>
+<li>a cache that must stay consistent across the JVM</li>
+</ul>
+<p>The pattern enforces a single instance and centralizes access to it.</p>
+<p>This is attractive because it reduces duplication and makes lifecycle management explicit. But it also means the object becomes part of the system’s global state. That can be a strength or a liability depending on the design.</p>
+<p>A good rule: use a Singleton only when the object truly represents a single runtime concern, not just because it is convenient to keep everything accessible from one place.</p>
+<hr>
+<h2 id="the-classical-gang-of-four-intent">The Classical Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-classical-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four describes Singleton as a pattern that ensures a class has one instance and provides a global point of access.</p>
+<p>In practice, that usually means:</p>
+<ul>
+<li>the constructor is private or otherwise restricted</li>
+<li>a static method returns the single instance</li>
+<li>the instance is created lazily or eagerly depending on the strategy</li>
+</ul>
+<p>The key idea is to control object creation so the application has a single consistent instance.</p>
+<p>From an architecture perspective, the Singleton pattern is best understood as a lifecycle management pattern, not as a substitute for proper dependency design.</p>
+<hr>
+<h2 id="a-simple-java-example-eager-initialization">A Simple Java Example: Eager Initialization<a hidden class="anchor" aria-hidden="true" href="#a-simple-java-example-eager-initialization">#</a></h2>
+<p>Here is the most straightforward version of the Singleton pattern in Java:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AppConfig</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">AppConfig</span><span class="w"> </span><span class="n">INSTANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AppConfig</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">environment</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="nf">AppConfig</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">environment</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getenv</span><span class="p">().</span><span class="na">getOrDefault</span><span class="p">(</span><span class="s">&#34;APP_ENV&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;dev&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">AppConfig</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">INSTANCE</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">getEnvironment</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">environment</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This is easy to reason about. The instance is created when the class loads, which makes it thread-safe by default.</p>
+<p>The downside is that it may create an object eagerly even when the application does not use it. In many cases, that is acceptable. For configuration or logging, it often is.</p>
+<p>But in larger systems, eager initialization can be wasteful or can trigger expensive work too early.</p>
+<hr>
+<h2 id="lazy-initialization">Lazy Initialization<a hidden class="anchor" aria-hidden="true" href="#lazy-initialization">#</a></h2>
+<p>If you want to create the instance only when it is first needed, you can use lazy initialization:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AppConfig</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">AppConfig</span><span class="w"> </span><span class="n">instance</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="nf">AppConfig</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">synchronized</span><span class="w"> </span><span class="n">AppConfig</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">instance</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AppConfig</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">instance</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This version avoids creating the object up front, but it uses <code>synchronized</code> on every access. That makes it thread-safe, though it introduces overhead.</p>
+<p>For a system that is heavily read during normal operation, that performance cost can become noticeable.</p>
+<hr>
+<h2 id="double-checked-locking">Double-Checked Locking<a hidden class="anchor" aria-hidden="true" href="#double-checked-locking">#</a></h2>
+<p>A more efficient thread-safe approach is double-checked locking:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AppConfig</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">volatile</span><span class="w"> </span><span class="n">AppConfig</span><span class="w"> </span><span class="n">instance</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="nf">AppConfig</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">AppConfig</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">instance</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">synchronized</span><span class="w"> </span><span class="p">(</span><span class="n">AppConfig</span><span class="p">.</span><span class="na">class</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">instance</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="n">instance</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AppConfig</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">instance</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This version minimizes locking overhead while still ensuring safe publication. The use of <code>volatile</code> is important because it prevents stale reads and reordering issues.</p>
+<p>This is a classic Java pattern for lazy-singleton initialization. It is still widely discussed, but there is usually an even cleaner alternative.</p>
+<hr>
+<h2 id="the-best-java-idiom-initialization-on-demand-holder">The Best Java Idiom: Initialization-on-Demand Holder<a hidden class="anchor" aria-hidden="true" href="#the-best-java-idiom-initialization-on-demand-holder">#</a></h2>
+<p>The most common production-safe pattern in Java today is the initialization-on-demand holder idiom:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AppConfig</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="nf">AppConfig</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Holder</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">AppConfig</span><span class="w"> </span><span class="n">INSTANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AppConfig</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">AppConfig</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">Holder</span><span class="p">.</span><span class="na">INSTANCE</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This pattern is elegant because:</p>
+<ul>
+<li>it is lazy</li>
+<li>it is thread-safe</li>
+<li>it avoids synchronization overhead</li>
+<li>it is simple to understand</li>
+</ul>
+<p>Java will initialize the nested class only when <code>getInstance()</code> is called. This is often the best choice for a JVM-based service that needs a single instance and no extra ceremony.</p>
+<p>This is the kind of implementation I would typically keep in a real enterprise codebase when a true singleton is justified.</p>
+<hr>
+<h2 id="when-a-singleton-makes-sense">When a Singleton Makes Sense<a hidden class="anchor" aria-hidden="true" href="#when-a-singleton-makes-sense">#</a></h2>
+<p>A Singleton is appropriate when one instance truly represents a single runtime resource or process-wide policy.</p>
+<p>Common examples:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">MetricsRegistry</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">MetricsRegistry</span><span class="w"> </span><span class="n">INSTANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MetricsRegistry</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="o">&gt;</span><span class="w"> </span><span class="n">counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ConcurrentHashMap</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="nf">MetricsRegistry</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">MetricsRegistry</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">INSTANCE</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">increment</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">metricName</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">counters</span><span class="p">.</span><span class="na">merge</span><span class="p">(</span><span class="n">metricName</span><span class="p">,</span><span class="w"> </span><span class="n">1L</span><span class="p">,</span><span class="w"> </span><span class="n">Long</span><span class="p">::</span><span class="n">sum</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This is reasonable because a metrics registry is a process-wide concern. A single registry keeps all metrics aggregation centralized.</p>
+<p>Another example is a configuration object:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">EnvironmentConfig</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Holder</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">private</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">EnvironmentConfig</span><span class="w"> </span><span class="n">INSTANCE</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">EnvironmentConfig</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">apiBaseUrl</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="nf">EnvironmentConfig</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">apiBaseUrl</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">getenv</span><span class="p">().</span><span class="na">getOrDefault</span><span class="p">(</span><span class="s">&#34;API_BASE_URL&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;http://localhost:8080&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">EnvironmentConfig</span><span class="w"> </span><span class="nf">getInstance</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">Holder</span><span class="p">.</span><span class="na">INSTANCE</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">getApiBaseUrl</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">apiBaseUrl</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This is a good example of a singleton representing a true application-wide configuration, not just a convenient holder for random state.</p>
+<hr>
+<h2 id="when-the-singleton-pattern-becomes-a-problem">When the Singleton Pattern Becomes a Problem<a hidden class="anchor" aria-hidden="true" href="#when-the-singleton-pattern-becomes-a-problem">#</a></h2>
+<p>This is where engineering judgment matters.</p>
+<p>The Singleton pattern is easy to overuse, and when it is used poorly it creates hidden global state. That introduces several problems:</p>
+<h3 id="1-it-hides-dependencies">1. It hides dependencies<a hidden class="anchor" aria-hidden="true" href="#1-it-hides-dependencies">#</a></h3>
+<p>If a class depends on a singleton, it is not obvious from the constructor what it needs to function.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PaymentService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">processPayment</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">PaymentGateway</span><span class="w"> </span><span class="n">gateway</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">PaymentGateway</span><span class="p">.</span><span class="na">getInstance</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">gateway</span><span class="p">.</span><span class="na">charge</span><span class="p">(</span><span class="n">100</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This makes the class harder to test and reason about because the dependency is not explicit.</p>
+<h3 id="2-it-makes-unit-testing-harder">2. It makes unit testing harder<a hidden class="anchor" aria-hidden="true" href="#2-it-makes-unit-testing-harder">#</a></h3>
+<p>Singletons are hard to replace with test doubles. In many codebases, this leads to brittle tests or broad mocking setups.</p>
+<h3 id="3-it-creates-global-coupling">3. It creates global coupling<a hidden class="anchor" aria-hidden="true" href="#3-it-creates-global-coupling">#</a></h3>
+<p>When many components reach into a singleton, the system becomes more tightly connected than it appears on the surface.</p>
+<h3 id="4-it-can-become-a-concurrency-bottleneck">4. It can become a concurrency bottleneck<a hidden class="anchor" aria-hidden="true" href="#4-it-can-become-a-concurrency-bottleneck">#</a></h3>
+<p>If the singleton owns shared mutable state, everything touches the same object and contention increases.</p>
+<p>This does not mean Singletons are always wrong. It means they should be used deliberately and only where the lifecycle semantics justify it.</p>
+<hr>
+<h2 id="a-better-alternative-in-many-cases-dependency-injection">A Better Alternative in Many Cases: Dependency Injection<a hidden class="anchor" aria-hidden="true" href="#a-better-alternative-in-many-cases-dependency-injection">#</a></h2>
+<p>In modern Java applications, the preferred pattern is often to inject dependencies explicitly rather than reaching into global state.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PaymentService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">PaymentGateway</span><span class="w"> </span><span class="n">paymentGateway</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">PaymentService</span><span class="p">(</span><span class="n">PaymentGateway</span><span class="w"> </span><span class="n">paymentGateway</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">paymentGateway</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paymentGateway</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">processPayment</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">paymentGateway</span><span class="p">.</span><span class="na">charge</span><span class="p">(</span><span class="n">100</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This is easier to test, easier to reason about, and more explicit about the object’s runtime relationships.</p>
+<p>In a Spring application, this is usually the preferred model. A singleton-like service can still be configured as a bean, but the dependency graph remains explicit.</p>
+<p>The Singleton pattern is not inherently bad. It is just often less desirable than explicit wiring when the real requirement is not a global singleton at all.</p>
+<hr>
+<h2 id="the-enum-singleton-in-java">The Enum Singleton in Java<a hidden class="anchor" aria-hidden="true" href="#the-enum-singleton-in-java">#</a></h2>
+<p>If a class truly needs to be a singleton, the safest Java-specific implementation is often an enum singleton:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">enum</span><span class="w"> </span><span class="n">SecurityContext</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">INSTANCE</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">currentUser</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#34;system&#34;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">getCurrentUser</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">currentUser</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This is a strong option because:</p>
+<ul>
+<li>the JVM guarantees only one instance exists</li>
+<li>serialization is handled safely</li>
+<li>thread safety is built in</li>
+<li>reflection-based attacks are much harder to execute</li>
+</ul>
+<p>This is usually the most robust approach when you truly need a singleton in Java.</p>
+<p>The trade-off is that an enum is a bit more opinionated. It only makes sense when the singleton is conceptually a fixed, process-wide value or service.</p>
+<hr>
+<h2 id="practical-guidance-for-real-teams">Practical Guidance for Real Teams<a hidden class="anchor" aria-hidden="true" href="#practical-guidance-for-real-teams">#</a></h2>
+<p>Here is how I think about the Singleton pattern in production systems:</p>
+<ul>
+<li>Use it for true process-wide resources that are conceptually singular.</li>
+<li>Avoid it for ordinary business objects or convenience access.</li>
+<li>Prefer explicit dependency injection whenever the object is not truly global.</li>
+<li>Keep the singleton stateless or carefully controlled when possible.</li>
+<li>Be careful with mutable shared state.</li>
+<li>If you use a singleton, choose a thread-safe implementation and document the reason.</li>
+</ul>
+<p>A good mental model is: a Singleton is an architecture decision, not a coding shortcut.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Singleton pattern is one of the clearest examples of a design pattern that is simple to explain and easy to misuse.</p>
+<p>Its value is real when you need a single, well-defined runtime authority: a configuration hub, a metrics registry, a process-wide coordination object, or a service that must be globally consistent.</p>
+<p>Its risk is equally real when it becomes a hidden global variable in disguise.</p>
+<p>That is why the Singleton pattern deserves respect, but not worship.</p>
+<p>The right question is not “Can I make this a singleton?” The better question is “Does the system truly require exactly one instance, and does that design improve correctness and maintainability rather than merely reducing typing?”</p>
+<p>That is the difference between an intentional design and a convenience hack.</p>
+<p>If you want a singleton, implement it carefully. If you do not need one, avoid it. The best Java code is usually the code that makes its dependencies explicit and keeps the system honest.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/architecture/">Architecture</a></li>
+      <li><a href="http://localhost:1313/tags/engineering/">Engineering</a></li>
+      <li><a href="http://localhost:1313/tags/java/">Java</a></li>
+      <li><a href="http://localhost:1313/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

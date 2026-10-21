@@ -17,7 +17,7 @@ jobs:
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
       with:
         submodules: recursive # Fetch Hugo themes (true OR recursive)
         fetch-depth: 0 # Fetch all history for .GitInfo and .Lastmod
@@ -30,7 +30,7 @@ jobs:
 
     - name: Cache restore
       id: cache-restore
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v6
       with:
         path: ${{ runner.temp }}/hugo_cache
         key: hugo-${{ github.run_id }}
@@ -41,13 +41,13 @@ jobs:
 
     - name: Cache save
       id: cache-save
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v6
       with:
         path: ${{ runner.temp }}/hugo_cache
         key: ${{ steps.cache-restore.outputs.cache-primary-key }}
 
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v5
       with:
         path: ./public
   deploy:
@@ -59,4 +59,4 @@ jobs:
     steps:
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v4
+      uses: actions/deploy-pages@v5

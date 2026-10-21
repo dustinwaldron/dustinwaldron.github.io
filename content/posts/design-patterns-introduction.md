@@ -1,6 +1,6 @@
 ---
 title: "Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth"
-date: "2026-10-20T13:00:00-04:00"
+date: "2026-10-01T13:00:00-04:00"
 description: "A principal-engineer view of why design patterns matter, a summary of the Gang of Four book, and how SOLID principles connect to practical Java design."
 tags:
   - architecture

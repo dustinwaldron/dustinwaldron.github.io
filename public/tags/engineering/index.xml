@@ -2,24 +2,24 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Engineering on Dustin Waldron</title>
-    <link>https://dustinwaldron.github.io/tags/engineering/</link>
+    <link>http://localhost:1313/tags/engineering/</link>
     <description>Recent content in Engineering on Dustin Waldron</description>
     <generator>Hugo -- 0.158.0</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 20 Oct 2026 13:00:00 -0400</lastBuildDate>
-    <atom:link href="https://dustinwaldron.github.io/tags/engineering/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="http://localhost:1313/tags/engineering/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth</title>
-      <link>https://dustinwaldron.github.io/posts/design-patterns-introduction/</link>
+      <link>http://localhost:1313/posts/design-patterns-introduction/</link>
       <pubDate>Tue, 20 Oct 2026 13:00:00 -0400</pubDate>
-      <guid>https://dustinwaldron.github.io/posts/design-patterns-introduction/</guid>
+      <guid>http://localhost:1313/posts/design-patterns-introduction/</guid>
       <description>A principal-engineer view of why design patterns matter, a summary of the Gang of Four book, and how SOLID principles connect to practical Java design.</description>
     </item>
     <item>
       <title>Why I Started a Tech Blog (and How You Can Too with Hugo &#43; GitHub Pages)</title>
-      <link>https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/</link>
+      <link>http://localhost:1313/posts/why-i-started-a-tech-blog/</link>
       <pubDate>Sat, 01 Nov 2025 11:00:00 -0400</pubDate>
-      <guid>https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/</guid>
+      <guid>http://localhost:1313/posts/why-i-started-a-tech-blog/</guid>
       <description>My first blog post — plus a guide to setting up your own Hugo blog on GitHub Pages.</description>
     </item>
   </channel>

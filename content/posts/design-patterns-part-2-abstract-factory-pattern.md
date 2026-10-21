@@ -1,6 +1,6 @@
 ---
 title: "Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects"
-date: "2026-10-24T11:00:00-04:00"
+date: "2026-10-03T11:00:00-04:00"
 description: "A practical Java-oriented look at the Abstract Factory pattern, including when it helps, how it differs from a simple factory, and how it keeps object creation flexible without creating a mess of conditionals."
 tags:
   - architecture

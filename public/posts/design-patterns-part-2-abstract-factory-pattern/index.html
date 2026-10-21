@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="noindex, nofollow">
+<title>Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-oriented look at the Abstract Factory pattern, including when it helps, how it differs from a simple factory, and how it keeps object creation flexible without creating a mess of conditionals.">
+<meta name="author" content="">
+<link rel="canonical" href="http://localhost:1313/posts/design-patterns-part-2-abstract-factory-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon.ico">
+<link rel="apple-touch-icon" href="http://localhost:1313/favicon.ico">
+<link rel="mask-icon" href="http://localhost:1313/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/design-patterns-part-2-abstract-factory-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="http://localhost:1313/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects
+    </h1>
+    <div class="post-description">
+      A practical Java-oriented look at the Abstract Factory pattern, including when it helps, how it differs from a simple factory, and how it keeps object creation flexible without creating a mess of conditionals.
+    </div>
+    <div class="post-meta"><span title='2026-10-03 11:00:00 -0400 EDT'>October 3, 2026</span>&nbsp;·&nbsp;<span>9 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-abstract-factory-pattern-solves-a-specific-design-problem">The Abstract Factory Pattern Solves a Specific Design Problem</a></li>
+    <li><a href="#why-families-of-objects-matter">Why Families of Objects Matter</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#abstract-factory-vs-factory-method">Abstract Factory vs Factory Method</a>
+      <ul>
+        <li><a href="#factory-method">Factory Method</a></li>
+        <li><a href="#abstract-factory">Abstract Factory</a></li>
+      </ul>
+    </li>
+    <li><a href="#a-java-example-ui-components-across-platforms">A Java Example: UI Components Across Platforms</a>
+      <ul>
+        <li><a href="#product-interfaces">Product interfaces</a></li>
+        <li><a href="#concrete-products-for-desktop">Concrete products for desktop</a></li>
+        <li><a href="#concrete-products-for-mobile">Concrete products for mobile</a></li>
+        <li><a href="#abstract-factory-1">Abstract factory</a></li>
+        <li><a href="#concrete-factories">Concrete factories</a></li>
+        <li><a href="#client-code">Client code</a></li>
+        <li><a href="#usage">Usage</a></li>
+      </ul>
+    </li>
+    <li><a href="#a-real-world-example-payment-providers">A Real-World Example: Payment Providers</a>
+      <ul>
+        <li><a href="#interfaces">Interfaces</a></li>
+        <li><a href="#stripe-implementation-family">Stripe implementation family</a></li>
+        <li><a href="#paypal-implementation-family">PayPal implementation family</a></li>
+        <li><a href="#factory-interface">Factory interface</a></li>
+        <li><a href="#concrete-factory">Concrete factory</a></li>
+      </ul>
+    </li>
+    <li><a href="#why-the-pattern-is-valuable-in-java-systems">Why the Pattern Is Valuable in Java Systems</a></li>
+    <li><a href="#the-design-trade-offs">The Design Trade-Offs</a></li>
+    <li><a href="#how-it-relates-to-solid">How It Relates to SOLID</a>
+      <ul>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#a-common-anti-pattern-factory-explosion">A Common Anti-Pattern: Factory Explosion</a></li>
+    <li><a href="#dependency-injection-and-abstract-factories-together">Dependency Injection and Abstract Factories Together</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-abstract-factory-pattern-solves-a-specific-design-problem">The Abstract Factory Pattern Solves a Specific Design Problem<a hidden class="anchor" aria-hidden="true" href="#the-abstract-factory-pattern-solves-a-specific-design-problem">#</a></h2>
+<p>The Singleton pattern is about one instance. The Abstract Factory pattern is about families of related objects.</p>
+<p>That difference matters.</p>
+<p>If you are building software that must work across multiple implementations of a common domain, a simple factory may be enough. But when the system needs to create a set of related products together—such as a UI toolkit, a database access layer, or a messaging stack—the Abstract Factory pattern gives you a more coherent and extensible abstraction.</p>
+<p>This pattern is one of the most useful creational patterns in enterprise Java design because it allows a system to depend on interfaces and families of implementations without becoming tightly coupled to exact classes.</p>
+<p>It is also one of the easiest patterns to misuse. The common temptation is to introduce an abstract factory too early, before the domain has enough shape. That creates extra architecture without real payoff. A pattern is only valuable when it solves a real variation problem.</p>
+<hr>
+<h2 id="why-families-of-objects-matter">Why Families of Objects Matter<a hidden class="anchor" aria-hidden="true" href="#why-families-of-objects-matter">#</a></h2>
+<p>Most complex systems depend on multiple related objects working together.</p>
+<p>Think about a UI framework:</p>
+<ul>
+<li>a button</li>
+<li>a checkbox</li>
+<li>a text field</li>
+<li>a scroll bar</li>
+</ul>
+<p>These are not just random objects. They are a family of UI components that need to share a visual language and behavior.</p>
+<p>Now imagine the same application must support both a desktop theme and a mobile theme. The classes are different, but the interfaces are the same. You do not want client code to know which concrete implementation is being used. You want the client to ask for a factory and then consume the product family through stable interfaces.</p>
+<p>That is exactly the problem the Abstract Factory pattern addresses.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four describes the Abstract Factory pattern as a way to provide an interface for creating families of related or dependent objects without specifying their concrete classes.</p>
+<p>The idea is simple but powerful:</p>
+<ul>
+<li>define a product family</li>
+<li>define a factory interface for creating each product in that family</li>
+<li>create concrete factories for each implementation family</li>
+<li>let the client depend on the abstract factory and abstract products, not the concrete variants</li>
+</ul>
+<p>This keeps the system open for extension and closed for modification. When a new implementation family appears, you add a new concrete factory rather than rewriting every call site.</p>
+<hr>
+<h2 id="abstract-factory-vs-factory-method">Abstract Factory vs Factory Method<a hidden class="anchor" aria-hidden="true" href="#abstract-factory-vs-factory-method">#</a></h2>
+<p>These two patterns are related, but they solve different problems.</p>
+<h3 id="factory-method">Factory Method<a hidden class="anchor" aria-hidden="true" href="#factory-method">#</a></h3>
+<p>The Factory Method pattern usually gives you one point of variation: one object is created through a subclass or a method.</p>
+<p>Example: a <code>DocumentParserFactory</code> creates a parser for a document type.</p>
+<h3 id="abstract-factory">Abstract Factory<a hidden class="anchor" aria-hidden="true" href="#abstract-factory">#</a></h3>
+<p>The Abstract Factory pattern is broader. It creates a family of related objects together. Think of it as a higher-level factory, one layer above the individual product factories.</p>
+<p>Example: a <code>UIFactory</code> creates a <code>Button</code>, <code>TextField</code>, and <code>Dialog</code> that all belong to the same platform family.</p>
+<p>A simple rule:</p>
+<ul>
+<li>use Factory Method when you vary one product</li>
+<li>use Abstract Factory when you vary a whole family of related products</li>
+</ul>
+<p>If you try to force an abstract factory into a small codebase, you may over-engineer the solution. But in a platform abstraction or cross-environment design, it becomes extremely valuable.</p>
+<hr>
+<h2 id="a-java-example-ui-components-across-platforms">A Java Example: UI Components Across Platforms<a hidden class="anchor" aria-hidden="true" href="#a-java-example-ui-components-across-platforms">#</a></h2>
+<p>Let us look at a typical cross-platform scenario.</p>
+<p>We want to create desktop and mobile UI components that share a common interface but have different implementations.</p>
+<h3 id="product-interfaces">Product interfaces<a hidden class="anchor" aria-hidden="true" href="#product-interfaces">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Button</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">render</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">TextField</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">render</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-products-for-desktop">Concrete products for desktop<a hidden class="anchor" aria-hidden="true" href="#concrete-products-for-desktop">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">DesktopButton</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">Button</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">render</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Rendering desktop button&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">DesktopTextField</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">TextField</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">render</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Rendering desktop text field&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-products-for-mobile">Concrete products for mobile<a hidden class="anchor" aria-hidden="true" href="#concrete-products-for-mobile">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">MobileButton</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">Button</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">render</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Rendering mobile button&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">MobileTextField</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">TextField</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">render</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Rendering mobile text field&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="abstract-factory-1">Abstract factory<a hidden class="anchor" aria-hidden="true" href="#abstract-factory-1">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">UIFactory</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">Button</span><span class="w"> </span><span class="nf">createButton</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">TextField</span><span class="w"> </span><span class="nf">createTextField</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-factories">Concrete factories<a hidden class="anchor" aria-hidden="true" href="#concrete-factories">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">DesktopUIFactory</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">UIFactory</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">Button</span><span class="w"> </span><span class="nf">createButton</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DesktopButton</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">TextField</span><span class="w"> </span><span class="nf">createTextField</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DesktopTextField</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">MobileUIFactory</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">UIFactory</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">Button</span><span class="w"> </span><span class="nf">createButton</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MobileButton</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">TextField</span><span class="w"> </span><span class="nf">createTextField</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">MobileTextField</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="client-code">Client code<a hidden class="anchor" aria-hidden="true" href="#client-code">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">LoginForm</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">Button</span><span class="w"> </span><span class="n">submitButton</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">TextField</span><span class="w"> </span><span class="n">usernameField</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">LoginForm</span><span class="p">(</span><span class="n">UIFactory</span><span class="w"> </span><span class="n">factory</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">submitButton</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">factory</span><span class="p">.</span><span class="na">createButton</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">usernameField</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">factory</span><span class="p">.</span><span class="na">createTextField</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">render</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">usernameField</span><span class="p">.</span><span class="na">render</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">submitButton</span><span class="p">.</span><span class="na">render</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="usage">Usage<a hidden class="anchor" aria-hidden="true" href="#usage">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Main</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">UIFactory</span><span class="w"> </span><span class="n">factory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DesktopUIFactory</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">LoginForm</span><span class="w"> </span><span class="n">form</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">LoginForm</span><span class="p">(</span><span class="n">factory</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">form</span><span class="p">.</span><span class="na">render</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This is exactly the benefit of the pattern: the client code asks for a family of related objects and does not care whether the actual implementation is desktop or mobile.</p>
+<hr>
+<h2 id="a-real-world-example-payment-providers">A Real-World Example: Payment Providers<a hidden class="anchor" aria-hidden="true" href="#a-real-world-example-payment-providers">#</a></h2>
+<p>Another strong example is a payment system that supports multiple providers.</p>
+<p>You may need:</p>
+<ul>
+<li>a <code>PaymentGateway</code></li>
+<li>a <code>RefundProcessor</code></li>
+<li>a <code>RiskEvaluator</code></li>
+</ul>
+<p>These all belong to a provider family and need to work together as a coherent system.</p>
+<h3 id="interfaces">Interfaces<a hidden class="anchor" aria-hidden="true" href="#interfaces">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">PaymentGateway</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">authorize</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">amount</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">RefundProcessor</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">refund</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">paymentId</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">amount</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">RiskEvaluator</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">isHighRisk</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="stripe-implementation-family">Stripe implementation family<a hidden class="anchor" aria-hidden="true" href="#stripe-implementation-family">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">StripeGateway</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">PaymentGateway</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">authorize</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">amount</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Stripe authorized payment for user &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">userId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">StripeRefundProcessor</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">RefundProcessor</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">refund</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">paymentId</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">amount</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Stripe refunded payment &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">paymentId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">StripeRiskEvaluator</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">RiskEvaluator</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">isHighRisk</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="paypal-implementation-family">PayPal implementation family<a hidden class="anchor" aria-hidden="true" href="#paypal-implementation-family">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PayPalGateway</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">PaymentGateway</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">authorize</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">amount</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;PayPal authorized payment for user &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">userId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PayPalRefundProcessor</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">RefundProcessor</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">refund</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">paymentId</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">amount</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;PayPal refunded payment &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">paymentId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PayPalRiskEvaluator</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">RiskEvaluator</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">isHighRisk</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="factory-interface">Factory interface<a hidden class="anchor" aria-hidden="true" href="#factory-interface">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">PaymentProviderFactory</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">PaymentGateway</span><span class="w"> </span><span class="nf">createPaymentGateway</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">RefundProcessor</span><span class="w"> </span><span class="nf">createRefundProcessor</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">RiskEvaluator</span><span class="w"> </span><span class="nf">createRiskEvaluator</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-factory">Concrete factory<a hidden class="anchor" aria-hidden="true" href="#concrete-factory">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">StripeFactory</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">PaymentProviderFactory</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">PaymentGateway</span><span class="w"> </span><span class="nf">createPaymentGateway</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StripeGateway</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">RefundProcessor</span><span class="w"> </span><span class="nf">createRefundProcessor</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StripeRefundProcessor</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">RiskEvaluator</span><span class="w"> </span><span class="nf">createRiskEvaluator</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StripeRiskEvaluator</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This pattern becomes valuable when different providers require different implementation details, but the business process expects a consistent contract.</p>
+<hr>
+<h2 id="why-the-pattern-is-valuable-in-java-systems">Why the Pattern Is Valuable in Java Systems<a hidden class="anchor" aria-hidden="true" href="#why-the-pattern-is-valuable-in-java-systems">#</a></h2>
+<p>The Abstract Factory pattern is especially useful when you need to:</p>
+<ul>
+<li>support multiple implementations behind one consistent API</li>
+<li>vary an entire product family without changing client code</li>
+<li>isolate platform-specific concerns</li>
+<li>keep the system decoupled from concrete classes</li>
+</ul>
+<p>It is often used in layered applications where each environment or provider has its own concrete implementation while the rest of the service layer depends only on abstractions.</p>
+<p>In Java enterprise code, this is common in:</p>
+<ul>
+<li>UI libraries</li>
+<li>persistence abstractions</li>
+<li>cloud provider adapters</li>
+<li>message broker implementations</li>
+<li>payment and fraud frameworks</li>
+</ul>
+<p>The pattern helps a system remain maintainable as the number of variants grows. A codebase that hardcodes <code>if (provider == &quot;stripe&quot;)</code> all over the place is usually a smell. The Abstract Factory pattern gives a cleaner place to centralize that logic.</p>
+<hr>
+<h2 id="the-design-trade-offs">The Design Trade-Offs<a hidden class="anchor" aria-hidden="true" href="#the-design-trade-offs">#</a></h2>
+<p>The Abstract Factory pattern is not free.</p>
+<p>It adds abstraction. It introduces more types and more indirection. That means a team must justify the additional structure.</p>
+<p>The downside is visible when the system is simple and the product family is not actually variant-rich. In a small application, an abstract factory can make the code feel heavier than the problem deserves.</p>
+<p>This is where technical judgment matters.</p>
+<p>A good design does not add abstraction because it looks “clean.” It adds it because the product families are real and the flexibility is valuable.</p>
+<p>If your code only has one implementation and no meaningful variation, an abstract factory is probably unnecessary. If you have multiple platform-specific or provider-specific implementations that must stay consistent, it becomes a strong design choice.</p>
+<hr>
+<h2 id="how-it-relates-to-solid">How It Relates to SOLID<a hidden class="anchor" aria-hidden="true" href="#how-it-relates-to-solid">#</a></h2>
+<p>The Abstract Factory pattern aligns clearly with the SOLID principles, especially the Open/Closed Principle and the Dependency Inversion Principle.</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>The client code depends on abstractions, not concrete classes. Adding a new factory or product family does not require rewriting the client logic. You add new implementations instead.</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>The system depends on interfaces such as <code>UIFactory</code>, <code>Button</code>, and <code>TextField</code>, not direct classes like <code>DesktopButton</code> or <code>StripeGateway</code>.</p>
+<p>This is the same reason the pattern is powerful: it keeps high-level logic independent from low-level decisions.</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>The factory is responsible for creating products in a coherent family. The client stays focused on business behavior and delegates creation to the factory.</p>
+<p>This pattern is a concrete expression of those principles in a recurring design problem.</p>
+<hr>
+<h2 id="a-common-anti-pattern-factory-explosion">A Common Anti-Pattern: Factory Explosion<a hidden class="anchor" aria-hidden="true" href="#a-common-anti-pattern-factory-explosion">#</a></h2>
+<p>A lot of teams create abstract factories too early and then end up with a forest of abstract types, product interfaces, and implementation classes that never really change.</p>
+<p>This is the trap.</p>
+<p>The pattern is not a reward for complexity. It is a tool for complexity that is real, recurring, and worth managing.</p>
+<p>Before introducing an abstract factory, ask:</p>
+<ul>
+<li>are there multiple related families?</li>
+<li>will these implementations vary over time?</li>
+<li>do the products need to stay consistent as a set?</li>
+<li>is the logic likely to accumulate conditional branching if we do not abstract it?</li>
+</ul>
+<p>If the answer is mostly no, then a simpler factory or direct dependency injection may be a better fit.</p>
+<hr>
+<h2 id="dependency-injection-and-abstract-factories-together">Dependency Injection and Abstract Factories Together<a hidden class="anchor" aria-hidden="true" href="#dependency-injection-and-abstract-factories-together">#</a></h2>
+<p>In modern Java applications, the Abstract Factory pattern often pairs well with dependency injection.</p>
+<p>Instead of constructing a factory directly in the client, you can inject it:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CheckoutService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">PaymentProviderFactory</span><span class="w"> </span><span class="n">paymentProviderFactory</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">CheckoutService</span><span class="p">(</span><span class="n">PaymentProviderFactory</span><span class="w"> </span><span class="n">paymentProviderFactory</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">paymentProviderFactory</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paymentProviderFactory</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">processPayment</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">amount</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">PaymentGateway</span><span class="w"> </span><span class="n">gateway</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">paymentProviderFactory</span><span class="p">.</span><span class="na">createPaymentGateway</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">gateway</span><span class="p">.</span><span class="na">authorize</span><span class="p">(</span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">amount</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This keeps the service logic clean and makes the provider selection explicit at the composition root.</p>
+<p>This is a good example of how patterns and modern object-oriented design work together. The pattern still matters, but the wiring becomes more explicit and testable.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Abstract Factory pattern is a strong solution when a system must work with families of related objects and keep the client code independent from concrete implementation choices.</p>
+<p>It is particularly effective when your codebase must support:</p>
+<ul>
+<li>multiple platforms</li>
+<li>multiple providers</li>
+<li>distinct implementation families</li>
+<li>consistent object sets that belong together</li>
+</ul>
+<p>It becomes less valuable when the variation is shallow or the domain is too small to justify the added layers.</p>
+<p>The best engineering decisions are not made by memorizing patterns. They are made by recognizing the shape of the problem.</p>
+<p>If the system needs a coherent family of related objects, the Abstract Factory pattern is not just elegant—it is practical. If it does not, then simpler abstractions are likely the better choice.</p>
+<p>That is the design discipline that separates thoughtful engineering from pattern-heavy complexity.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="http://localhost:1313/tags/architecture/">Architecture</a></li>
+      <li><a href="http://localhost:1313/tags/engineering/">Engineering</a></li>
+      <li><a href="http://localhost:1313/tags/java/">Java</a></li>
+      <li><a href="http://localhost:1313/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="http://localhost:1313/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

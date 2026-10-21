@@ -2,24 +2,38 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Posts on Dustin Waldron</title>
-    <link>https://dustinwaldron.github.io/posts/</link>
+    <link>http://localhost:1313/posts/</link>
     <description>Recent content in Posts on Dustin Waldron</description>
     <generator>Hugo -- 0.158.0</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 20 Oct 2026 13:00:00 -0400</lastBuildDate>
-    <atom:link href="https://dustinwaldron.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 03 Oct 2026 11:00:00 -0400</lastBuildDate>
+    <atom:link href="http://localhost:1313/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects</title>
+      <link>http://localhost:1313/posts/design-patterns-part-2-abstract-factory-pattern/</link>
+      <pubDate>Sat, 03 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>http://localhost:1313/posts/design-patterns-part-2-abstract-factory-pattern/</guid>
+      <description>A practical Java-oriented look at the Abstract Factory pattern, including when it helps, how it differs from a simple factory, and how it keeps object creation flexible without creating a mess of conditionals.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Singleton Pattern - When One Instance Is the Right Design</title>
+      <link>http://localhost:1313/posts/design-patterns-part-1-singleton-pattern/</link>
+      <pubDate>Fri, 02 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>http://localhost:1313/posts/design-patterns-part-1-singleton-pattern/</guid>
+      <description>A practical look at the Singleton pattern in Java, including when it helps, when it hurts, and the safest implementation patterns for production code.</description>
+    </item>
     <item>
       <title>Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth</title>
-      <link>https://dustinwaldron.github.io/posts/design-patterns-introduction/</link>
-      <pubDate>Tue, 20 Oct 2026 13:00:00 -0400</pubDate>
-      <guid>https://dustinwaldron.github.io/posts/design-patterns-introduction/</guid>
+      <link>http://localhost:1313/posts/design-patterns-introduction/</link>
+      <pubDate>Thu, 01 Oct 2026 13:00:00 -0400</pubDate>
+      <guid>http://localhost:1313/posts/design-patterns-introduction/</guid>
       <description>A principal-engineer view of why design patterns matter, a summary of the Gang of Four book, and how SOLID principles connect to practical Java design.</description>
     </item>
     <item>
       <title>Why I Started a Tech Blog (and How You Can Too with Hugo &#43; GitHub Pages)</title>
-      <link>https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/</link>
+      <link>http://localhost:1313/posts/why-i-started-a-tech-blog/</link>
       <pubDate>Sat, 01 Nov 2025 11:00:00 -0400</pubDate>
-      <guid>https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/</guid>
+      <guid>http://localhost:1313/posts/why-i-started-a-tech-blog/</guid>
       <description>My first blog post — plus a guide to setting up your own Hugo blog on GitHub Pages.</description>
     </item>
   </channel>
