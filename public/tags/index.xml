@@ -2,80 +2,80 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Tags on Dustin Waldron</title>
-    <link>http://localhost:1313/tags/</link>
+    <link>https://dustinwaldron.github.io/tags/</link>
     <description>Recent content in Tags on Dustin Waldron</description>
     <generator>Hugo -- 0.158.0</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 20 Oct 2026 13:00:00 -0400</lastBuildDate>
-    <atom:link href="http://localhost:1313/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 17 Oct 2026 11:00:00 -0400</lastBuildDate>
+    <atom:link href="https://dustinwaldron.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Architecture</title>
-      <link>http://localhost:1313/tags/architecture/</link>
-      <pubDate>Tue, 20 Oct 2026 13:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/tags/architecture/</guid>
+      <link>https://dustinwaldron.github.io/tags/architecture/</link>
+      <pubDate>Sat, 17 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/tags/architecture/</guid>
       <description></description>
     </item>
     <item>
       <title>Best Practices</title>
-      <link>http://localhost:1313/tags/best-practices/</link>
-      <pubDate>Tue, 20 Oct 2026 13:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/tags/best-practices/</guid>
+      <link>https://dustinwaldron.github.io/tags/best-practices/</link>
+      <pubDate>Sat, 17 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/tags/best-practices/</guid>
       <description></description>
     </item>
     <item>
       <title>Engineering</title>
-      <link>http://localhost:1313/tags/engineering/</link>
-      <pubDate>Tue, 20 Oct 2026 13:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/tags/engineering/</guid>
+      <link>https://dustinwaldron.github.io/tags/engineering/</link>
+      <pubDate>Sat, 17 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/tags/engineering/</guid>
       <description></description>
     </item>
     <item>
       <title>Java</title>
-      <link>http://localhost:1313/tags/java/</link>
-      <pubDate>Tue, 20 Oct 2026 13:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/tags/java/</guid>
+      <link>https://dustinwaldron.github.io/tags/java/</link>
+      <pubDate>Sat, 17 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/tags/java/</guid>
       <description></description>
     </item>
     <item>
       <title>Blogging</title>
-      <link>http://localhost:1313/tags/blogging/</link>
+      <link>https://dustinwaldron.github.io/tags/blogging/</link>
       <pubDate>Sat, 01 Nov 2025 11:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/tags/blogging/</guid>
+      <guid>https://dustinwaldron.github.io/tags/blogging/</guid>
       <description></description>
     </item>
     <item>
       <title>Frontend</title>
-      <link>http://localhost:1313/tags/frontend/</link>
+      <link>https://dustinwaldron.github.io/tags/frontend/</link>
       <pubDate>Sat, 01 Nov 2025 11:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/tags/frontend/</guid>
+      <guid>https://dustinwaldron.github.io/tags/frontend/</guid>
       <description></description>
     </item>
     <item>
       <title>Github</title>
-      <link>http://localhost:1313/tags/github/</link>
+      <link>https://dustinwaldron.github.io/tags/github/</link>
       <pubDate>Sat, 01 Nov 2025 11:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/tags/github/</guid>
+      <guid>https://dustinwaldron.github.io/tags/github/</guid>
       <description></description>
     </item>
     <item>
       <title>Nodejs</title>
-      <link>http://localhost:1313/tags/nodejs/</link>
+      <link>https://dustinwaldron.github.io/tags/nodejs/</link>
       <pubDate>Sat, 01 Nov 2025 11:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/tags/nodejs/</guid>
+      <guid>https://dustinwaldron.github.io/tags/nodejs/</guid>
       <description></description>
     </item>
     <item>
       <title>React</title>
-      <link>http://localhost:1313/tags/react/</link>
+      <link>https://dustinwaldron.github.io/tags/react/</link>
       <pubDate>Sat, 01 Nov 2025 11:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/tags/react/</guid>
+      <guid>https://dustinwaldron.github.io/tags/react/</guid>
       <description></description>
     </item>
     <item>
       <title>Typescript</title>
-      <link>http://localhost:1313/tags/typescript/</link>
+      <link>https://dustinwaldron.github.io/tags/typescript/</link>
       <pubDate>Sat, 01 Nov 2025 11:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/tags/typescript/</guid>
+      <guid>https://dustinwaldron.github.io/tags/typescript/</guid>
       <description></description>
     </item>
   </channel>

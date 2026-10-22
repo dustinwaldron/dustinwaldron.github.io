@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: Composite Pattern - Treating Trees and Leaves Uniformly | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-focused guide to the Composite pattern, including recursive structures, uniform APIs for leaves and groups, and production trade-offs.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-10-composite-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-10-composite-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-10-composite-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Composite Pattern - Treating Trees and Leaves Uniformly">
+  <meta property="og:description" content="A practical Java-focused guide to the Composite pattern, including recursive structures, uniform APIs for leaves and groups, and production trade-offs.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-11T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-11T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Composite Pattern - Treating Trees and Leaves Uniformly">
+<meta name="twitter:description" content="A practical Java-focused guide to the Composite pattern, including recursive structures, uniform APIs for leaves and groups, and production trade-offs.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Composite Pattern - Treating Trees and Leaves Uniformly",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-10-composite-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Composite Pattern - Treating Trees and Leaves Uniformly",
+  "name": "Design Patterns: Composite Pattern - Treating Trees and Leaves Uniformly",
+  "description": "A practical Java-focused guide to the Composite pattern, including recursive structures, uniform APIs for leaves and groups, and production trade-offs.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The Composite Pattern Solves a Hierarchy Handling Problem Many business domains are hierarchical:\nfolders and files menus and menu items organizations and teams UI containers and widgets product bundles and single products The pain appears when client code must constantly ask:\n“Is this a leaf or a container?” “Do I call one method for a single item and another for groups?” That conditional branching spreads quickly and makes hierarchy logic harder to maintain.\nThe Composite pattern solves this by letting clients treat individual objects and compositions uniformly through a shared interface.\nIn Java systems, this is one of the cleanest patterns for recursive structures because it gives a single API surface for both leaf nodes and grouped nodes.\nThe Gang of Four Intent The Gang of Four defines Composite as:\nCompose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.\nIn practical terms:\ndefine a component interface implement leaves (atomic elements) implement composites (containers of components) keep operations available through the same component contract This removes type-specific handling from callers and keeps tree logic inside the structure itself.\nWhy Teams Use Composite Without Composite, clients usually build nested loops and type checks all over the codebase.\nThat causes:\nduplicated traversal logic fragile recursion spread across services hard-to-evolve APIs when hierarchy depth changes With Composite, callers use one abstraction and let the structure handle recursion.\nThis improves clarity, especially in systems where tree depth and node combinations change over time.\nJava Example: File System Tree Component public interface FileSystemNode { String name(); long sizeInBytes(); void print(String indent); } Leaf public class FileNode implements FileSystemNode { private final String name; private final long sizeInBytes; public FileNode(String name, long sizeInBytes) { this.name = name; this.sizeInBytes = sizeInBytes; } @Override public String name() { return name; } @Override public long sizeInBytes() { return sizeInBytes; } @Override public void print(String indent) { System.out.println(indent + \"- \" + name + \" (\" + sizeInBytes + \" bytes)\"); } } Composite import java.util.ArrayList; import java.util.List; public class DirectoryNode implements FileSystemNode { private final String name; private final List\u003cFileSystemNode\u003e children = new ArrayList\u003c\u003e(); public DirectoryNode(String name) { this.name = name; } public void add(FileSystemNode child) { children.add(child); } public void remove(FileSystemNode child) { children.remove(child); } @Override public String name() { return name; } @Override public long sizeInBytes() { long total = 0L; for (FileSystemNode child : children) { total += child.sizeInBytes(); } return total; } @Override public void print(String indent) { System.out.println(indent + \"+ \" + name + \"/\"); for (FileSystemNode child : children) { child.print(indent + \" \"); } } } Usage public class Main { public static void main(String[] args) { DirectoryNode root = new DirectoryNode(\"root\"); DirectoryNode reports = new DirectoryNode(\"reports\"); DirectoryNode logs = new DirectoryNode(\"logs\"); reports.add(new FileNode(\"q1.pdf\", 120_000)); reports.add(new FileNode(\"q2.pdf\", 110_000)); logs.add(new FileNode(\"app.log\", 2_000_000)); root.add(reports); root.add(logs); root.add(new FileNode(\"readme.txt\", 3_000)); root.print(\"\"); System.out.println(\"Total size: \" + root.sizeInBytes()); } } Client code treats directories and files through the same FileSystemNode interface.\nAnother Java Example: Cart Items and Bundles Composite is also useful for pricing trees where a line item can be either a product or a bundle of products.\nComponent public interface CartItem { String label(); long priceCents(); } Leaf public class ProductItem implements CartItem { private final String label; private final long priceCents; public ProductItem(String label, long priceCents) { this.label = label; this.priceCents = priceCents; } @Override public String label() { return label; } @Override public long priceCents() { return priceCents; } } Composite import java.util.ArrayList; import java.util.List; public class BundleItem implements CartItem { private final String label; private final List\u003cCartItem\u003e children = new ArrayList\u003c\u003e(); public BundleItem(String label) { this.label = label; } public void add(CartItem item) { children.add(item); } @Override public String label() { return label; } @Override public long priceCents() { long total = 0L; for (CartItem child : children) { total += child.priceCents(); } return total; } } This provides a unified pricing contract regardless of whether the line is atomic or nested.\nTransparent vs Safe Composite There are two common design choices:\nTransparent composite: child-management methods (add/remove) exist on the component interface.\neasier for callers but leaves may expose unsupported operations Safe composite: child-management methods exist only on composite classes.\nstronger type safety slightly more awareness required by callers when mutating trees The examples above use a safe composite approach, which is often better in Java codebases that prioritize explicitness.\nComposite vs Decorator vs Visitor Composite models tree structures and part-whole recursion. Decorator adds behavior layers around a component. Visitor separates algorithms from object structures (often over composites). If your core problem is “single object and group should be treated the same,” Composite is usually the right fit.\nSOLID Alignment Composite aligns well with SOLID principles:\nOpen/Closed Principle You can introduce new leaf/composite node types without changing callers that target the component interface.\nSingle Responsibility Principle Each node type owns its own behavior (for example, how it computes size or price).\nDependency Inversion Principle Clients depend on FileSystemNode or CartItem abstractions, not concrete node classes.\nThis helps recursive models stay extensible and predictable.\nCommon Mistakes 1. Pushing mutation APIs onto all nodes without guardrails If leaves expose add/remove and callers misuse them, runtime failures become common.\n2. Embedding traversal logic everywhere Traversal should live close to the component model or in dedicated operations, not repeated in every client.\n3. Ignoring recursion depth and performance Large trees can create expensive recursive operations. Cache or optimize where needed.\n4. Mixing unrelated responsibilities into node classes Keep nodes focused on structure and domain behavior, not transport, persistence, and UI concerns all at once.\nPractical Guidance for Java Teams Use Composite when:\nyour domain is naturally hierarchical clients need uniform handling for single and grouped entities recursive behavior is central to the model Avoid Composite when:\nthere is no meaningful hierarchy flat structures are sufficient recursive abstraction introduces unnecessary complexity The pattern should simplify client code, not shift complexity into hidden recursion.\nFinal Thoughts The Composite pattern is one of the most useful structural patterns for domain models built around trees and part-whole relationships.\nIn Java, it gives teams a clean way to represent nested structures while preserving a uniform API for leaves and composites.\nUsed well, Composite reduces conditional branching and centralizes recursion in the model itself. Used poorly, it can introduce confusing mutation semantics and hidden performance costs.\nThe practical standard is clear:\nmodel the hierarchy explicitly expose consistent component contracts choose transparent vs safe composition intentionally validate recursion behavior with real-world depth and size That is how you make hierarchical systems easier to reason about and evolve.\n",
+  "wordCount" : "1093",
+  "inLanguage": "en",
+  "datePublished": "2026-10-11T11:00:00-04:00",
+  "dateModified": "2026-10-11T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-10-composite-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Composite Pattern - Treating Trees and Leaves Uniformly
+    </h1>
+    <div class="post-description">
+      A practical Java-focused guide to the Composite pattern, including recursive structures, uniform APIs for leaves and groups, and production trade-offs.
+    </div>
+    <div class="post-meta"><span title='2026-10-11 11:00:00 -0400 EDT'>October 11, 2026</span>&nbsp;·&nbsp;<span>6 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-composite-pattern-solves-a-hierarchy-handling-problem">The Composite Pattern Solves a Hierarchy Handling Problem</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#why-teams-use-composite">Why Teams Use Composite</a></li>
+    <li><a href="#java-example-file-system-tree">Java Example: File System Tree</a>
+      <ul>
+        <li><a href="#component">Component</a></li>
+        <li><a href="#leaf">Leaf</a></li>
+        <li><a href="#composite">Composite</a></li>
+        <li><a href="#usage">Usage</a></li>
+      </ul>
+    </li>
+    <li><a href="#another-java-example-cart-items-and-bundles">Another Java Example: Cart Items and Bundles</a>
+      <ul>
+        <li><a href="#component-1">Component</a></li>
+        <li><a href="#leaf-1">Leaf</a></li>
+        <li><a href="#composite-1">Composite</a></li>
+      </ul>
+    </li>
+    <li><a href="#transparent-vs-safe-composite">Transparent vs Safe Composite</a></li>
+    <li><a href="#composite-vs-decorator-vs-visitor">Composite vs Decorator vs Visitor</a></li>
+    <li><a href="#solid-alignment">SOLID Alignment</a>
+      <ul>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#common-mistakes">Common Mistakes</a>
+      <ul>
+        <li><a href="#1-pushing-mutation-apis-onto-all-nodes-without-guardrails">1. Pushing mutation APIs onto all nodes without guardrails</a></li>
+        <li><a href="#2-embedding-traversal-logic-everywhere">2. Embedding traversal logic everywhere</a></li>
+        <li><a href="#3-ignoring-recursion-depth-and-performance">3. Ignoring recursion depth and performance</a></li>
+        <li><a href="#4-mixing-unrelated-responsibilities-into-node-classes">4. Mixing unrelated responsibilities into node classes</a></li>
+      </ul>
+    </li>
+    <li><a href="#practical-guidance-for-java-teams">Practical Guidance for Java Teams</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-composite-pattern-solves-a-hierarchy-handling-problem">The Composite Pattern Solves a Hierarchy Handling Problem<a hidden class="anchor" aria-hidden="true" href="#the-composite-pattern-solves-a-hierarchy-handling-problem">#</a></h2>
+<p>Many business domains are hierarchical:</p>
+<ul>
+<li>folders and files</li>
+<li>menus and menu items</li>
+<li>organizations and teams</li>
+<li>UI containers and widgets</li>
+<li>product bundles and single products</li>
+</ul>
+<p>The pain appears when client code must constantly ask:</p>
+<ul>
+<li>“Is this a leaf or a container?”</li>
+<li>“Do I call one method for a single item and another for groups?”</li>
+</ul>
+<p>That conditional branching spreads quickly and makes hierarchy logic harder to maintain.</p>
+<p>The Composite pattern solves this by letting clients treat individual objects and compositions uniformly through a shared interface.</p>
+<p>In Java systems, this is one of the cleanest patterns for recursive structures because it gives a single API surface for both leaf nodes and grouped nodes.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four defines Composite as:</p>
+<blockquote>
+<p>Compose objects into tree structures to represent part-whole hierarchies. Composite lets clients treat individual objects and compositions of objects uniformly.</p>
+</blockquote>
+<p>In practical terms:</p>
+<ul>
+<li>define a component interface</li>
+<li>implement leaves (atomic elements)</li>
+<li>implement composites (containers of components)</li>
+<li>keep operations available through the same component contract</li>
+</ul>
+<p>This removes type-specific handling from callers and keeps tree logic inside the structure itself.</p>
+<hr>
+<h2 id="why-teams-use-composite">Why Teams Use Composite<a hidden class="anchor" aria-hidden="true" href="#why-teams-use-composite">#</a></h2>
+<p>Without Composite, clients usually build nested loops and type checks all over the codebase.</p>
+<p>That causes:</p>
+<ul>
+<li>duplicated traversal logic</li>
+<li>fragile recursion spread across services</li>
+<li>hard-to-evolve APIs when hierarchy depth changes</li>
+</ul>
+<p>With Composite, callers use one abstraction and let the structure handle recursion.</p>
+<p>This improves clarity, especially in systems where tree depth and node combinations change over time.</p>
+<hr>
+<h2 id="java-example-file-system-tree">Java Example: File System Tree<a hidden class="anchor" aria-hidden="true" href="#java-example-file-system-tree">#</a></h2>
+<h3 id="component">Component<a hidden class="anchor" aria-hidden="true" href="#component">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">FileSystemNode</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">String</span><span class="w"> </span><span class="nf">name</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="nf">sizeInBytes</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">print</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">indent</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="leaf">Leaf<a hidden class="anchor" aria-hidden="true" href="#leaf">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">FileNode</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">FileSystemNode</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">name</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">sizeInBytes</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">FileNode</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">name</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">sizeInBytes</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">sizeInBytes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">sizeInBytes</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">name</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">name</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">sizeInBytes</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">sizeInBytes</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">print</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">indent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">indent</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34;- &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34; (&#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">sizeInBytes</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34; bytes)&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="composite">Composite<a hidden class="anchor" aria-hidden="true" href="#composite">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.ArrayList</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.List</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">DirectoryNode</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">FileSystemNode</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">name</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">FileSystemNode</span><span class="o">&gt;</span><span class="w"> </span><span class="n">children</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">DirectoryNode</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">name</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">FileSystemNode</span><span class="w"> </span><span class="n">child</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">children</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">child</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">remove</span><span class="p">(</span><span class="n">FileSystemNode</span><span class="w"> </span><span class="n">child</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">children</span><span class="p">.</span><span class="na">remove</span><span class="p">(</span><span class="n">child</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">name</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">name</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">sizeInBytes</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">0L</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">FileSystemNode</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">children</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="na">sizeInBytes</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">total</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">print</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">indent</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">indent</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34;+ &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">name</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34;/&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">FileSystemNode</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">children</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">child</span><span class="p">.</span><span class="na">print</span><span class="p">(</span><span class="n">indent</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34;  &#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="usage">Usage<a hidden class="anchor" aria-hidden="true" href="#usage">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Main</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">DirectoryNode</span><span class="w"> </span><span class="n">root</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DirectoryNode</span><span class="p">(</span><span class="s">&#34;root&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">DirectoryNode</span><span class="w"> </span><span class="n">reports</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DirectoryNode</span><span class="p">(</span><span class="s">&#34;reports&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">DirectoryNode</span><span class="w"> </span><span class="n">logs</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">DirectoryNode</span><span class="p">(</span><span class="s">&#34;logs&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">reports</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">FileNode</span><span class="p">(</span><span class="s">&#34;q1.pdf&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">120_000</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">reports</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">FileNode</span><span class="p">(</span><span class="s">&#34;q2.pdf&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">110_000</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">logs</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">FileNode</span><span class="p">(</span><span class="s">&#34;app.log&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">2_000_000</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">root</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">reports</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">root</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">logs</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">root</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">FileNode</span><span class="p">(</span><span class="s">&#34;readme.txt&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">3_000</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">root</span><span class="p">.</span><span class="na">print</span><span class="p">(</span><span class="s">&#34;&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Total size: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">root</span><span class="p">.</span><span class="na">sizeInBytes</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Client code treats directories and files through the same <code>FileSystemNode</code> interface.</p>
+<hr>
+<h2 id="another-java-example-cart-items-and-bundles">Another Java Example: Cart Items and Bundles<a hidden class="anchor" aria-hidden="true" href="#another-java-example-cart-items-and-bundles">#</a></h2>
+<p>Composite is also useful for pricing trees where a line item can be either a product or a bundle of products.</p>
+<h3 id="component-1">Component<a hidden class="anchor" aria-hidden="true" href="#component-1">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">CartItem</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">String</span><span class="w"> </span><span class="nf">label</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="nf">priceCents</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="leaf-1">Leaf<a hidden class="anchor" aria-hidden="true" href="#leaf-1">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">ProductItem</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">CartItem</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">label</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">priceCents</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">ProductItem</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">label</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">priceCents</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">label</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">priceCents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">priceCents</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">label</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">label</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">priceCents</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">priceCents</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="composite-1">Composite<a hidden class="anchor" aria-hidden="true" href="#composite-1">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.ArrayList</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.List</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">BundleItem</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">CartItem</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">label</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">CartItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">children</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">BundleItem</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">label</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">label</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">label</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">CartItem</span><span class="w"> </span><span class="n">item</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">children</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">item</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">label</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">label</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">priceCents</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">0L</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">CartItem</span><span class="w"> </span><span class="n">child</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">children</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">total</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="n">child</span><span class="p">.</span><span class="na">priceCents</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">total</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This provides a unified pricing contract regardless of whether the line is atomic or nested.</p>
+<hr>
+<h2 id="transparent-vs-safe-composite">Transparent vs Safe Composite<a hidden class="anchor" aria-hidden="true" href="#transparent-vs-safe-composite">#</a></h2>
+<p>There are two common design choices:</p>
+<ul>
+<li>
+<p><strong>Transparent composite</strong>: child-management methods (<code>add/remove</code>) exist on the component interface.</p>
+<ul>
+<li>easier for callers</li>
+<li>but leaves may expose unsupported operations</li>
+</ul>
+</li>
+<li>
+<p><strong>Safe composite</strong>: child-management methods exist only on composite classes.</p>
+<ul>
+<li>stronger type safety</li>
+<li>slightly more awareness required by callers when mutating trees</li>
+</ul>
+</li>
+</ul>
+<p>The examples above use a safe composite approach, which is often better in Java codebases that prioritize explicitness.</p>
+<hr>
+<h2 id="composite-vs-decorator-vs-visitor">Composite vs Decorator vs Visitor<a hidden class="anchor" aria-hidden="true" href="#composite-vs-decorator-vs-visitor">#</a></h2>
+<ul>
+<li><strong>Composite</strong> models tree structures and part-whole recursion.</li>
+<li><strong>Decorator</strong> adds behavior layers around a component.</li>
+<li><strong>Visitor</strong> separates algorithms from object structures (often over composites).</li>
+</ul>
+<p>If your core problem is “single object and group should be treated the same,” Composite is usually the right fit.</p>
+<hr>
+<h2 id="solid-alignment">SOLID Alignment<a hidden class="anchor" aria-hidden="true" href="#solid-alignment">#</a></h2>
+<p>Composite aligns well with SOLID principles:</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>You can introduce new leaf/composite node types without changing callers that target the component interface.</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>Each node type owns its own behavior (for example, how it computes size or price).</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>Clients depend on <code>FileSystemNode</code> or <code>CartItem</code> abstractions, not concrete node classes.</p>
+<p>This helps recursive models stay extensible and predictable.</p>
+<hr>
+<h2 id="common-mistakes">Common Mistakes<a hidden class="anchor" aria-hidden="true" href="#common-mistakes">#</a></h2>
+<h3 id="1-pushing-mutation-apis-onto-all-nodes-without-guardrails">1. Pushing mutation APIs onto all nodes without guardrails<a hidden class="anchor" aria-hidden="true" href="#1-pushing-mutation-apis-onto-all-nodes-without-guardrails">#</a></h3>
+<p>If leaves expose <code>add/remove</code> and callers misuse them, runtime failures become common.</p>
+<h3 id="2-embedding-traversal-logic-everywhere">2. Embedding traversal logic everywhere<a hidden class="anchor" aria-hidden="true" href="#2-embedding-traversal-logic-everywhere">#</a></h3>
+<p>Traversal should live close to the component model or in dedicated operations, not repeated in every client.</p>
+<h3 id="3-ignoring-recursion-depth-and-performance">3. Ignoring recursion depth and performance<a hidden class="anchor" aria-hidden="true" href="#3-ignoring-recursion-depth-and-performance">#</a></h3>
+<p>Large trees can create expensive recursive operations. Cache or optimize where needed.</p>
+<h3 id="4-mixing-unrelated-responsibilities-into-node-classes">4. Mixing unrelated responsibilities into node classes<a hidden class="anchor" aria-hidden="true" href="#4-mixing-unrelated-responsibilities-into-node-classes">#</a></h3>
+<p>Keep nodes focused on structure and domain behavior, not transport, persistence, and UI concerns all at once.</p>
+<hr>
+<h2 id="practical-guidance-for-java-teams">Practical Guidance for Java Teams<a hidden class="anchor" aria-hidden="true" href="#practical-guidance-for-java-teams">#</a></h2>
+<p>Use Composite when:</p>
+<ul>
+<li>your domain is naturally hierarchical</li>
+<li>clients need uniform handling for single and grouped entities</li>
+<li>recursive behavior is central to the model</li>
+</ul>
+<p>Avoid Composite when:</p>
+<ul>
+<li>there is no meaningful hierarchy</li>
+<li>flat structures are sufficient</li>
+<li>recursive abstraction introduces unnecessary complexity</li>
+</ul>
+<p>The pattern should simplify client code, not shift complexity into hidden recursion.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Composite pattern is one of the most useful structural patterns for domain models built around trees and part-whole relationships.</p>
+<p>In Java, it gives teams a clean way to represent nested structures while preserving a uniform API for leaves and composites.</p>
+<p>Used well, Composite reduces conditional branching and centralizes recursion in the model itself. Used poorly, it can introduce confusing mutation semantics and hidden performance costs.</p>
+<p>The practical standard is clear:</p>
+<ul>
+<li>model the hierarchy explicitly</li>
+<li>expose consistent component contracts</li>
+<li>choose transparent vs safe composition intentionally</li>
+<li>validate recursion behavior with real-world depth and size</li>
+</ul>
+<p>That is how you make hierarchical systems easier to reason about and evolve.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

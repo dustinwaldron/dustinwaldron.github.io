@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: Decorator Pattern - Extending Behavior Without Subclass Explosion | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-focused guide to the Decorator pattern, including composition-first extension, real-world examples, and common pitfalls.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-7-decorator-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-7-decorator-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-7-decorator-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Decorator Pattern - Extending Behavior Without Subclass Explosion">
+  <meta property="og:description" content="A practical Java-focused guide to the Decorator pattern, including composition-first extension, real-world examples, and common pitfalls.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-08T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-08T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Decorator Pattern - Extending Behavior Without Subclass Explosion">
+<meta name="twitter:description" content="A practical Java-focused guide to the Decorator pattern, including composition-first extension, real-world examples, and common pitfalls.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Decorator Pattern - Extending Behavior Without Subclass Explosion",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-7-decorator-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Decorator Pattern - Extending Behavior Without Subclass Explosion",
+  "name": "Design Patterns: Decorator Pattern - Extending Behavior Without Subclass Explosion",
+  "description": "A practical Java-focused guide to the Decorator pattern, including composition-first extension, real-world examples, and common pitfalls.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The Decorator Pattern Solves a Growth Problem in Object Design Most systems start with straightforward classes. Then requirements grow:\nadd auditing add retries add metrics add caching add access control If each variation is handled with inheritance, class hierarchies expand quickly and become hard to maintain. You end up with brittle combinations like CachedRetriedAuditedService.\nThe Decorator pattern solves this by attaching responsibilities to objects dynamically through composition. Instead of subclassing for every combination, you wrap objects with focused behavior layers.\nIn Java, this is one of the cleanest ways to keep extension flexible while protecting core classes from constant modification.\nThe Gang of Four Intent The Gang of Four defines Decorator as:\nAttach additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.\nPractically, this means:\ndefine a stable component interface keep core behavior in a concrete component create decorators implementing the same interface delegate to the wrapped component and add behavior before/after delegation This allows behavior to be composed at runtime in a controlled way.\nWhy Teams Reach for Decorator Decorator is useful when:\nyou need optional combinations of cross-cutting behavior inheritance trees are getting deep or redundant behavior should be enabled per environment or per call path core domain logic must stay isolated from operational concerns This is common in service clients, stream processing, request handling pipelines, and integrations.\nJava Example: Notification Service with Layered Behavior Component interface public interface NotificationService { void send(String userId, String message); } Concrete component public class EmailNotificationService implements NotificationService { @Override public void send(String userId, String message) { System.out.println(\"Sending email to \" + userId + \": \" + message); } } Base decorator public abstract class NotificationDecorator implements NotificationService { protected final NotificationService delegate; protected NotificationDecorator(NotificationService delegate) { this.delegate = delegate; } } Concrete decorators public class LoggingNotificationDecorator extends NotificationDecorator { public LoggingNotificationDecorator(NotificationService delegate) { super(delegate); } @Override public void send(String userId, String message) { System.out.println(\"[LOG] Sending notification to \" + userId); delegate.send(userId, message); } } public class MetricsNotificationDecorator extends NotificationDecorator { public MetricsNotificationDecorator(NotificationService delegate) { super(delegate); } @Override public void send(String userId, String message) { long start = System.nanoTime(); delegate.send(userId, message); long durationNanos = System.nanoTime() - start; System.out.println(\"[METRIC] send.duration.ns=\" + durationNanos); } } public class RetryNotificationDecorator extends NotificationDecorator { private final int maxAttempts; public RetryNotificationDecorator(NotificationService delegate, int maxAttempts) { super(delegate); this.maxAttempts = maxAttempts; } @Override public void send(String userId, String message) { RuntimeException lastFailure = null; for (int attempt = 1; attempt \u003c= maxAttempts; attempt++) { try { delegate.send(userId, message); return; } catch (RuntimeException ex) { lastFailure = ex; System.out.println(\"[WARN] send failed on attempt \" + attempt + \", retrying\"); } } throw new IllegalStateException(\"Notification failed after retries\", lastFailure); } } Composition at runtime public class Main { public static void main(String[] args) { NotificationService service = new RetryNotificationDecorator( new MetricsNotificationDecorator( new LoggingNotificationDecorator( new EmailNotificationService() ) ), 3 ); service.send(\"user-123\", \"Welcome aboard!\"); } } This gives layered behavior without modifying EmailNotificationService or creating inheritance combinations.\nAnother Java Example: Repository Caching A common enterprise use case is wrapping repositories or API clients.\nRepository interface public interface ProductRepository { Product findById(String id); } Concrete repository public class SqlProductRepository implements ProductRepository { @Override public Product findById(String id) { System.out.println(\"Querying database for product \" + id); return new Product(id, \"Example Product\"); } } Caching decorator import java.util.Map; import java.util.concurrent.ConcurrentHashMap; public class CachingProductRepositoryDecorator implements ProductRepository { private final ProductRepository delegate; private final Map\u003cString, Product\u003e cache = new ConcurrentHashMap\u003c\u003e(); public CachingProductRepositoryDecorator(ProductRepository delegate) { this.delegate = delegate; } @Override public Product findById(String id) { return cache.computeIfAbsent(id, delegate::findById); } } This adds caching transparently while preserving the repository contract.\nDecorator vs Inheritance Inheritance is static; Decorator is compositional.\nInheritance adds behavior at compile time via subclassing. Decorator adds behavior at runtime via wrapping. If you need many behavior combinations, Decorator scales better than subclass trees.\nIf behavior is fixed and unlikely to vary, inheritance might be simpler.\nDecorator vs Adapter vs Proxy These patterns are often mixed up:\nDecorator: same interface, adds behavior. Adapter: converts one interface to another. Proxy: same interface, controls access (often for remote/lazy/security concerns). Decorator’s purpose is extension, not translation or access control.\nSOLID Alignment Decorator strongly supports SOLID principles:\nOpen/Closed Principle Add new behavior through new decorators, not by editing core components.\nSingle Responsibility Principle Each decorator owns one concern (logging, metrics, retry, caching).\nDependency Inversion Principle Clients depend on interfaces (NotificationService, ProductRepository) while concrete behavior is composed externally.\nThis keeps high-level workflows stable and implementation concerns modular.\nCommon Mistakes 1. Mixing too many responsibilities in one decorator Large decorators become mini-frameworks. Keep each one focused.\n2. Relying on decoration order without documenting it Order changes semantics. For example, retry-before-metrics and metrics-before-retry produce different telemetry.\n3. Leaking concrete types If callers downcast wrapped objects, abstraction is breaking down.\n4. Making debugging difficult Deep decorator stacks can obscure flow. Use consistent naming and targeted logging.\nDecorator helps structure complexity, but only when composition is intentional and observable.\nPractical Guidance for Java Teams Use Decorator when:\nbehavior is optional and combinable concerns are cross-cutting runtime composition is valuable Avoid Decorator when:\nbehavior is simple and fixed layering creates more indirection than value a straightforward implementation is easier to reason about Pattern discipline means balancing flexibility with clarity.\nFinal Thoughts The Decorator pattern remains one of the most practical patterns in production Java systems because it enables behavior growth without inheritance sprawl.\nUsed well, it gives teams a clean composition model for logging, retries, metrics, caching, and policy enforcement while keeping core classes focused.\nUsed carelessly, it creates opaque wrapper chains that are hard to reason about.\nThe right approach is simple:\nkeep interfaces stable keep decorators focused compose behavior intentionally test composition order like production behavior That is how you extend systems safely without turning class design into a hierarchy problem.\n",
+  "wordCount" : "961",
+  "inLanguage": "en",
+  "datePublished": "2026-10-08T11:00:00-04:00",
+  "dateModified": "2026-10-08T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-7-decorator-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Decorator Pattern - Extending Behavior Without Subclass Explosion
+    </h1>
+    <div class="post-description">
+      A practical Java-focused guide to the Decorator pattern, including composition-first extension, real-world examples, and common pitfalls.
+    </div>
+    <div class="post-meta"><span title='2026-10-08 11:00:00 -0400 EDT'>October 8, 2026</span>&nbsp;·&nbsp;<span>5 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-decorator-pattern-solves-a-growth-problem-in-object-design">The Decorator Pattern Solves a Growth Problem in Object Design</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#why-teams-reach-for-decorator">Why Teams Reach for Decorator</a></li>
+    <li><a href="#java-example-notification-service-with-layered-behavior">Java Example: Notification Service with Layered Behavior</a>
+      <ul>
+        <li><a href="#component-interface">Component interface</a></li>
+        <li><a href="#concrete-component">Concrete component</a></li>
+        <li><a href="#base-decorator">Base decorator</a></li>
+        <li><a href="#concrete-decorators">Concrete decorators</a></li>
+        <li><a href="#composition-at-runtime">Composition at runtime</a></li>
+      </ul>
+    </li>
+    <li><a href="#another-java-example-repository-caching">Another Java Example: Repository Caching</a>
+      <ul>
+        <li><a href="#repository-interface">Repository interface</a></li>
+        <li><a href="#concrete-repository">Concrete repository</a></li>
+        <li><a href="#caching-decorator">Caching decorator</a></li>
+      </ul>
+    </li>
+    <li><a href="#decorator-vs-inheritance">Decorator vs Inheritance</a></li>
+    <li><a href="#decorator-vs-adapter-vs-proxy">Decorator vs Adapter vs Proxy</a></li>
+    <li><a href="#solid-alignment">SOLID Alignment</a>
+      <ul>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#common-mistakes">Common Mistakes</a>
+      <ul>
+        <li><a href="#1-mixing-too-many-responsibilities-in-one-decorator">1. Mixing too many responsibilities in one decorator</a></li>
+        <li><a href="#2-relying-on-decoration-order-without-documenting-it">2. Relying on decoration order without documenting it</a></li>
+        <li><a href="#3-leaking-concrete-types">3. Leaking concrete types</a></li>
+        <li><a href="#4-making-debugging-difficult">4. Making debugging difficult</a></li>
+      </ul>
+    </li>
+    <li><a href="#practical-guidance-for-java-teams">Practical Guidance for Java Teams</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-decorator-pattern-solves-a-growth-problem-in-object-design">The Decorator Pattern Solves a Growth Problem in Object Design<a hidden class="anchor" aria-hidden="true" href="#the-decorator-pattern-solves-a-growth-problem-in-object-design">#</a></h2>
+<p>Most systems start with straightforward classes. Then requirements grow:</p>
+<ul>
+<li>add auditing</li>
+<li>add retries</li>
+<li>add metrics</li>
+<li>add caching</li>
+<li>add access control</li>
+</ul>
+<p>If each variation is handled with inheritance, class hierarchies expand quickly and become hard to maintain. You end up with brittle combinations like <code>CachedRetriedAuditedService</code>.</p>
+<p>The Decorator pattern solves this by attaching responsibilities to objects dynamically through composition. Instead of subclassing for every combination, you wrap objects with focused behavior layers.</p>
+<p>In Java, this is one of the cleanest ways to keep extension flexible while protecting core classes from constant modification.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four defines Decorator as:</p>
+<blockquote>
+<p>Attach additional responsibilities to an object dynamically. Decorators provide a flexible alternative to subclassing for extending functionality.</p>
+</blockquote>
+<p>Practically, this means:</p>
+<ul>
+<li>define a stable component interface</li>
+<li>keep core behavior in a concrete component</li>
+<li>create decorators implementing the same interface</li>
+<li>delegate to the wrapped component and add behavior before/after delegation</li>
+</ul>
+<p>This allows behavior to be composed at runtime in a controlled way.</p>
+<hr>
+<h2 id="why-teams-reach-for-decorator">Why Teams Reach for Decorator<a hidden class="anchor" aria-hidden="true" href="#why-teams-reach-for-decorator">#</a></h2>
+<p>Decorator is useful when:</p>
+<ul>
+<li>you need optional combinations of cross-cutting behavior</li>
+<li>inheritance trees are getting deep or redundant</li>
+<li>behavior should be enabled per environment or per call path</li>
+<li>core domain logic must stay isolated from operational concerns</li>
+</ul>
+<p>This is common in service clients, stream processing, request handling pipelines, and integrations.</p>
+<hr>
+<h2 id="java-example-notification-service-with-layered-behavior">Java Example: Notification Service with Layered Behavior<a hidden class="anchor" aria-hidden="true" href="#java-example-notification-service-with-layered-behavior">#</a></h2>
+<h3 id="component-interface">Component interface<a hidden class="anchor" aria-hidden="true" href="#component-interface">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">NotificationService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-component">Concrete component<a hidden class="anchor" aria-hidden="true" href="#concrete-component">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">EmailNotificationService</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">NotificationService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Sending email to &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34;: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">message</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="base-decorator">Base decorator<a hidden class="anchor" aria-hidden="true" href="#base-decorator">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">abstract</span><span class="w"> </span><span class="kd">class</span> <span class="nc">NotificationDecorator</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">NotificationService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">NotificationService</span><span class="w"> </span><span class="n">delegate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="nf">NotificationDecorator</span><span class="p">(</span><span class="n">NotificationService</span><span class="w"> </span><span class="n">delegate</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">delegate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">delegate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-decorators">Concrete decorators<a hidden class="anchor" aria-hidden="true" href="#concrete-decorators">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">LoggingNotificationDecorator</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">NotificationDecorator</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">LoggingNotificationDecorator</span><span class="p">(</span><span class="n">NotificationService</span><span class="w"> </span><span class="n">delegate</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">super</span><span class="p">(</span><span class="n">delegate</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;[LOG] Sending notification to &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">userId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">delegate</span><span class="p">.</span><span class="na">send</span><span class="p">(</span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">MetricsNotificationDecorator</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">NotificationDecorator</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">MetricsNotificationDecorator</span><span class="p">(</span><span class="n">NotificationService</span><span class="w"> </span><span class="n">delegate</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">super</span><span class="p">(</span><span class="n">delegate</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="n">start</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">nanoTime</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">delegate</span><span class="p">.</span><span class="na">send</span><span class="p">(</span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kt">long</span><span class="w"> </span><span class="n">durationNanos</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">System</span><span class="p">.</span><span class="na">nanoTime</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">start</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;[METRIC] send.duration.ns=&#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">durationNanos</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">RetryNotificationDecorator</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">NotificationDecorator</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">maxAttempts</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">RetryNotificationDecorator</span><span class="p">(</span><span class="n">NotificationService</span><span class="w"> </span><span class="n">delegate</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">maxAttempts</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">super</span><span class="p">(</span><span class="n">delegate</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">maxAttempts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">maxAttempts</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">send</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">RuntimeException</span><span class="w"> </span><span class="n">lastFailure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">attempt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">1</span><span class="p">;</span><span class="w"> </span><span class="n">attempt</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">maxAttempts</span><span class="p">;</span><span class="w"> </span><span class="n">attempt</span><span class="o">++</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">delegate</span><span class="p">.</span><span class="na">send</span><span class="p">(</span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">message</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">return</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">RuntimeException</span><span class="w"> </span><span class="n">ex</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">lastFailure</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">ex</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;[WARN] send failed on attempt &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">attempt</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34;, retrying&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Notification failed after retries&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">lastFailure</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="composition-at-runtime">Composition at runtime<a hidden class="anchor" aria-hidden="true" href="#composition-at-runtime">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Main</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">String</span><span class="o">[]</span><span class="w"> </span><span class="n">args</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">NotificationService</span><span class="w"> </span><span class="n">service</span><span class="w"> </span><span class="o">=</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">new</span><span class="w"> </span><span class="n">RetryNotificationDecorator</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">new</span><span class="w"> </span><span class="n">MetricsNotificationDecorator</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="k">new</span><span class="w"> </span><span class="n">LoggingNotificationDecorator</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                        </span><span class="k">new</span><span class="w"> </span><span class="n">EmailNotificationService</span><span class="p">()</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">),</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="n">3</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">service</span><span class="p">.</span><span class="na">send</span><span class="p">(</span><span class="s">&#34;user-123&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Welcome aboard!&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This gives layered behavior without modifying <code>EmailNotificationService</code> or creating inheritance combinations.</p>
+<hr>
+<h2 id="another-java-example-repository-caching">Another Java Example: Repository Caching<a hidden class="anchor" aria-hidden="true" href="#another-java-example-repository-caching">#</a></h2>
+<p>A common enterprise use case is wrapping repositories or API clients.</p>
+<h3 id="repository-interface">Repository interface<a hidden class="anchor" aria-hidden="true" href="#repository-interface">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">ProductRepository</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">Product</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">id</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-repository">Concrete repository<a hidden class="anchor" aria-hidden="true" href="#concrete-repository">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">SqlProductRepository</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ProductRepository</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">Product</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Querying database for product &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">id</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Product</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Example Product&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="caching-decorator">Caching decorator<a hidden class="anchor" aria-hidden="true" href="#caching-decorator">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Map</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.concurrent.ConcurrentHashMap</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CachingProductRepositoryDecorator</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ProductRepository</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">ProductRepository</span><span class="w"> </span><span class="n">delegate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">Product</span><span class="o">&gt;</span><span class="w"> </span><span class="n">cache</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ConcurrentHashMap</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">CachingProductRepositoryDecorator</span><span class="p">(</span><span class="n">ProductRepository</span><span class="w"> </span><span class="n">delegate</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">delegate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">delegate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">Product</span><span class="w"> </span><span class="nf">findById</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">cache</span><span class="p">.</span><span class="na">computeIfAbsent</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">delegate</span><span class="p">::</span><span class="n">findById</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This adds caching transparently while preserving the repository contract.</p>
+<hr>
+<h2 id="decorator-vs-inheritance">Decorator vs Inheritance<a hidden class="anchor" aria-hidden="true" href="#decorator-vs-inheritance">#</a></h2>
+<p>Inheritance is static; Decorator is compositional.</p>
+<ul>
+<li>Inheritance adds behavior at compile time via subclassing.</li>
+<li>Decorator adds behavior at runtime via wrapping.</li>
+</ul>
+<p>If you need many behavior combinations, Decorator scales better than subclass trees.</p>
+<p>If behavior is fixed and unlikely to vary, inheritance might be simpler.</p>
+<hr>
+<h2 id="decorator-vs-adapter-vs-proxy">Decorator vs Adapter vs Proxy<a hidden class="anchor" aria-hidden="true" href="#decorator-vs-adapter-vs-proxy">#</a></h2>
+<p>These patterns are often mixed up:</p>
+<ul>
+<li><strong>Decorator</strong>: same interface, adds behavior.</li>
+<li><strong>Adapter</strong>: converts one interface to another.</li>
+<li><strong>Proxy</strong>: same interface, controls access (often for remote/lazy/security concerns).</li>
+</ul>
+<p>Decorator’s purpose is extension, not translation or access control.</p>
+<hr>
+<h2 id="solid-alignment">SOLID Alignment<a hidden class="anchor" aria-hidden="true" href="#solid-alignment">#</a></h2>
+<p>Decorator strongly supports SOLID principles:</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>Add new behavior through new decorators, not by editing core components.</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>Each decorator owns one concern (logging, metrics, retry, caching).</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>Clients depend on interfaces (<code>NotificationService</code>, <code>ProductRepository</code>) while concrete behavior is composed externally.</p>
+<p>This keeps high-level workflows stable and implementation concerns modular.</p>
+<hr>
+<h2 id="common-mistakes">Common Mistakes<a hidden class="anchor" aria-hidden="true" href="#common-mistakes">#</a></h2>
+<h3 id="1-mixing-too-many-responsibilities-in-one-decorator">1. Mixing too many responsibilities in one decorator<a hidden class="anchor" aria-hidden="true" href="#1-mixing-too-many-responsibilities-in-one-decorator">#</a></h3>
+<p>Large decorators become mini-frameworks. Keep each one focused.</p>
+<h3 id="2-relying-on-decoration-order-without-documenting-it">2. Relying on decoration order without documenting it<a hidden class="anchor" aria-hidden="true" href="#2-relying-on-decoration-order-without-documenting-it">#</a></h3>
+<p>Order changes semantics. For example, retry-before-metrics and metrics-before-retry produce different telemetry.</p>
+<h3 id="3-leaking-concrete-types">3. Leaking concrete types<a hidden class="anchor" aria-hidden="true" href="#3-leaking-concrete-types">#</a></h3>
+<p>If callers downcast wrapped objects, abstraction is breaking down.</p>
+<h3 id="4-making-debugging-difficult">4. Making debugging difficult<a hidden class="anchor" aria-hidden="true" href="#4-making-debugging-difficult">#</a></h3>
+<p>Deep decorator stacks can obscure flow. Use consistent naming and targeted logging.</p>
+<p>Decorator helps structure complexity, but only when composition is intentional and observable.</p>
+<hr>
+<h2 id="practical-guidance-for-java-teams">Practical Guidance for Java Teams<a hidden class="anchor" aria-hidden="true" href="#practical-guidance-for-java-teams">#</a></h2>
+<p>Use Decorator when:</p>
+<ul>
+<li>behavior is optional and combinable</li>
+<li>concerns are cross-cutting</li>
+<li>runtime composition is valuable</li>
+</ul>
+<p>Avoid Decorator when:</p>
+<ul>
+<li>behavior is simple and fixed</li>
+<li>layering creates more indirection than value</li>
+<li>a straightforward implementation is easier to reason about</li>
+</ul>
+<p>Pattern discipline means balancing flexibility with clarity.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Decorator pattern remains one of the most practical patterns in production Java systems because it enables behavior growth without inheritance sprawl.</p>
+<p>Used well, it gives teams a clean composition model for logging, retries, metrics, caching, and policy enforcement while keeping core classes focused.</p>
+<p>Used carelessly, it creates opaque wrapper chains that are hard to reason about.</p>
+<p>The right approach is simple:</p>
+<ul>
+<li>keep interfaces stable</li>
+<li>keep decorators focused</li>
+<li>compose behavior intentionally</li>
+<li>test composition order like production behavior</li>
+</ul>
+<p>That is how you extend systems safely without turning class design into a hierarchy problem.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: Proxy Pattern - Controlling Access Without Changing the Core | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-focused guide to the Proxy pattern, including remote, virtual, and protection proxies with production-oriented examples and trade-offs.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-9-proxy-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-9-proxy-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-9-proxy-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Proxy Pattern - Controlling Access Without Changing the Core">
+  <meta property="og:description" content="A practical Java-focused guide to the Proxy pattern, including remote, virtual, and protection proxies with production-oriented examples and trade-offs.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-10T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-10T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Proxy Pattern - Controlling Access Without Changing the Core">
+<meta name="twitter:description" content="A practical Java-focused guide to the Proxy pattern, including remote, virtual, and protection proxies with production-oriented examples and trade-offs.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Proxy Pattern - Controlling Access Without Changing the Core",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-9-proxy-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Proxy Pattern - Controlling Access Without Changing the Core",
+  "name": "Design Patterns: Proxy Pattern - Controlling Access Without Changing the Core",
+  "description": "A practical Java-focused guide to the Proxy pattern, including remote, virtual, and protection proxies with production-oriented examples and trade-offs.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The Proxy Pattern Solves an Access and Control Problem In real systems, not every object should be called directly.\nSometimes you need:\nauthorization checks lazy loading for expensive resources remote invocation boundaries request throttling caching and fallback behavior The core object should still do its job, but callers may need controlled access to it.\nThat is where the Proxy pattern fits.\nProxy provides a substitute or placeholder for another object to control access to it. In Java systems, it is a practical way to insert operational policy around a component while keeping the component’s core logic unchanged.\nThe Gang of Four Intent The Gang of Four defines Proxy as:\nProvide a surrogate or placeholder for another object to control access to it.\nIn practical terms:\nthe proxy implements the same interface as the real subject callers interact with the proxy as if it were the real object the proxy decides how and when to delegate The pattern is most useful when control concerns are real and repeated.\nWhy Teams Use Proxy in Production Without a proxy, control logic often leaks into business code:\nauth checks repeated in multiple services ad hoc remote retry/circuit logic spread across clients lazy initialization logic duplicated per call site A proxy centralizes those policies.\nIt lets you keep business interfaces stable while enforcing operational rules in one place.\nJava Example: Protection Proxy for Authorization Subject interface public interface DocumentService { String read(String documentId, UserContext userContext); } Real subject public class RealDocumentService implements DocumentService { @Override public String read(String documentId, UserContext userContext) { return \"Document content for \" + documentId; } } Proxy public class AuthorizationDocumentProxy implements DocumentService { private final DocumentService delegate; public AuthorizationDocumentProxy(DocumentService delegate) { this.delegate = delegate; } @Override public String read(String documentId, UserContext userContext) { if (!userContext.hasRole(\"DOCUMENT_READ\")) { throw new SecurityException(\"User is not authorized to read documents\"); } return delegate.read(documentId, userContext); } } public record UserContext(String userId, java.util.Set\u003cString\u003e roles) { public boolean hasRole(String role) { return roles.contains(role); } } This keeps authorization at the boundary and domain behavior in the real service.\nJava Example: Virtual Proxy for Lazy Loading A virtual proxy is useful when object initialization is expensive.\nSubject interface public interface ReportRenderer { String render(); } Expensive real subject public class HeavyReportRenderer implements ReportRenderer { public HeavyReportRenderer() { // simulate expensive startup try { Thread.sleep(1000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); throw new IllegalStateException(\"Initialization interrupted\", e); } } @Override public String render() { return \"Rendered high-fidelity report\"; } } Lazy proxy public class LazyReportRendererProxy implements ReportRenderer { private volatile ReportRenderer delegate; @Override public String render() { if (delegate == null) { synchronized (this) { if (delegate == null) { delegate = new HeavyReportRenderer(); } } } return delegate.render(); } } This defers expensive initialization until the first real call.\nJava Example: Remote Proxy Boundary A remote proxy makes local code look like a local call while delegating over the network.\npublic interface CustomerProfileClient { CustomerProfile getProfile(String customerId); } public class HttpCustomerProfileClientProxy implements CustomerProfileClient { private final HttpGateway gateway; public HttpCustomerProfileClientProxy(HttpGateway gateway) { this.gateway = gateway; } @Override public CustomerProfile getProfile(String customerId) { String path = \"/customers/\" + customerId; String json = gateway.get(path); return CustomerProfile.fromJson(json); } } public record CustomerProfile(String customerId, String email) { public static CustomerProfile fromJson(String json) { // simplified parsing for example purposes return new CustomerProfile(\"customer-123\", \"user@example.com\"); } } This isolates transport and serialization concerns from business services.\nCommon Proxy Variants In practice, you will see these proxy types frequently:\nProtection proxy: enforces authorization/policy Virtual proxy: lazy-loads expensive objects Remote proxy: represents remote services locally Caching proxy: caches results before delegating Logging/monitoring proxy: captures telemetry around calls These are all the same structural idea: same interface, controlled delegation.\nProxy vs Decorator vs Adapter These patterns are similar structurally but different in intent:\nProxy controls access to an object. Decorator adds behavior/responsibilities compositionally. Adapter translates incompatible interfaces. If your concern is access control, lifecycle, remoting, or policy gates, Proxy is usually the right fit.\nSOLID Alignment Proxy can reinforce SOLID principles when applied deliberately:\nSingle Responsibility Principle Control concerns (auth, caching, remoting) live in proxies; domain logic remains in real subjects.\nOpen/Closed Principle You can add new proxy behaviors without modifying existing subject implementations.\nDependency Inversion Principle Clients depend on stable interfaces, not concrete classes or transport details.\nThis is why Proxy scales well in layered Java architectures.\nCommon Mistakes 1. Putting domain logic in the proxy Proxy should govern access and delegation, not become the business service.\n2. Hiding expensive side effects If a proxy adds network calls or retries, document it. “Looks local” can mislead performance expectations.\n3. Building deep proxy chains without observability Multiple wrappers can obscure behavior. Use clear naming and telemetry.\n4. Weak error semantics Proxies should normalize errors thoughtfully, not swallow failure details that operators need.\nPractical Guidance for Java Teams Use Proxy when:\nyou need policy enforcement at call boundaries object creation should be deferred remote integration details should stay isolated cross-cutting control concerns need consistency Avoid Proxy when:\ndirect invocation is already simple and safe added indirection provides no operational value proxy layers make debugging harder than the control benefit they provide Pattern discipline means using proxy for real control concerns, not cosmetic abstraction.\nFinal Thoughts The Proxy pattern is one of the most practical patterns in enterprise Java because it handles a common reality: access to behavior often needs governance.\nUsed well, Proxy keeps interfaces stable while enforcing authorization, lazy loading, remote boundaries, and operational policy in one place. Used poorly, it hides complexity and obscures performance characteristics.\nThe right approach is straightforward:\nkeep proxy intent explicit keep subject interfaces clean separate control concerns from domain concerns test policy and delegation paths as production-critical behavior That is how you add control without contaminating core business logic.\n",
+  "wordCount" : "956",
+  "inLanguage": "en",
+  "datePublished": "2026-10-10T11:00:00-04:00",
+  "dateModified": "2026-10-10T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-9-proxy-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Proxy Pattern - Controlling Access Without Changing the Core
+    </h1>
+    <div class="post-description">
+      A practical Java-focused guide to the Proxy pattern, including remote, virtual, and protection proxies with production-oriented examples and trade-offs.
+    </div>
+    <div class="post-meta"><span title='2026-10-10 11:00:00 -0400 EDT'>October 10, 2026</span>&nbsp;·&nbsp;<span>5 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-proxy-pattern-solves-an-access-and-control-problem">The Proxy Pattern Solves an Access and Control Problem</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#why-teams-use-proxy-in-production">Why Teams Use Proxy in Production</a></li>
+    <li><a href="#java-example-protection-proxy-for-authorization">Java Example: Protection Proxy for Authorization</a>
+      <ul>
+        <li><a href="#subject-interface">Subject interface</a></li>
+        <li><a href="#real-subject">Real subject</a></li>
+        <li><a href="#proxy">Proxy</a></li>
+      </ul>
+    </li>
+    <li><a href="#java-example-virtual-proxy-for-lazy-loading">Java Example: Virtual Proxy for Lazy Loading</a>
+      <ul>
+        <li><a href="#subject-interface-1">Subject interface</a></li>
+        <li><a href="#expensive-real-subject">Expensive real subject</a></li>
+        <li><a href="#lazy-proxy">Lazy proxy</a></li>
+      </ul>
+    </li>
+    <li><a href="#java-example-remote-proxy-boundary">Java Example: Remote Proxy Boundary</a></li>
+    <li><a href="#common-proxy-variants">Common Proxy Variants</a></li>
+    <li><a href="#proxy-vs-decorator-vs-adapter">Proxy vs Decorator vs Adapter</a></li>
+    <li><a href="#solid-alignment">SOLID Alignment</a>
+      <ul>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#common-mistakes">Common Mistakes</a>
+      <ul>
+        <li><a href="#1-putting-domain-logic-in-the-proxy">1. Putting domain logic in the proxy</a></li>
+        <li><a href="#2-hiding-expensive-side-effects">2. Hiding expensive side effects</a></li>
+        <li><a href="#3-building-deep-proxy-chains-without-observability">3. Building deep proxy chains without observability</a></li>
+        <li><a href="#4-weak-error-semantics">4. Weak error semantics</a></li>
+      </ul>
+    </li>
+    <li><a href="#practical-guidance-for-java-teams">Practical Guidance for Java Teams</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-proxy-pattern-solves-an-access-and-control-problem">The Proxy Pattern Solves an Access and Control Problem<a hidden class="anchor" aria-hidden="true" href="#the-proxy-pattern-solves-an-access-and-control-problem">#</a></h2>
+<p>In real systems, not every object should be called directly.</p>
+<p>Sometimes you need:</p>
+<ul>
+<li>authorization checks</li>
+<li>lazy loading for expensive resources</li>
+<li>remote invocation boundaries</li>
+<li>request throttling</li>
+<li>caching and fallback behavior</li>
+</ul>
+<p>The core object should still do its job, but callers may need controlled access to it.<br>
+That is where the Proxy pattern fits.</p>
+<p>Proxy provides a substitute or placeholder for another object to control access to it. In Java systems, it is a practical way to insert operational policy around a component while keeping the component’s core logic unchanged.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four defines Proxy as:</p>
+<blockquote>
+<p>Provide a surrogate or placeholder for another object to control access to it.</p>
+</blockquote>
+<p>In practical terms:</p>
+<ul>
+<li>the proxy implements the same interface as the real subject</li>
+<li>callers interact with the proxy as if it were the real object</li>
+<li>the proxy decides how and when to delegate</li>
+</ul>
+<p>The pattern is most useful when control concerns are real and repeated.</p>
+<hr>
+<h2 id="why-teams-use-proxy-in-production">Why Teams Use Proxy in Production<a hidden class="anchor" aria-hidden="true" href="#why-teams-use-proxy-in-production">#</a></h2>
+<p>Without a proxy, control logic often leaks into business code:</p>
+<ul>
+<li>auth checks repeated in multiple services</li>
+<li>ad hoc remote retry/circuit logic spread across clients</li>
+<li>lazy initialization logic duplicated per call site</li>
+</ul>
+<p>A proxy centralizes those policies.</p>
+<p>It lets you keep business interfaces stable while enforcing operational rules in one place.</p>
+<hr>
+<h2 id="java-example-protection-proxy-for-authorization">Java Example: Protection Proxy for Authorization<a hidden class="anchor" aria-hidden="true" href="#java-example-protection-proxy-for-authorization">#</a></h2>
+<h3 id="subject-interface">Subject interface<a hidden class="anchor" aria-hidden="true" href="#subject-interface">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">DocumentService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">String</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">documentId</span><span class="p">,</span><span class="w"> </span><span class="n">UserContext</span><span class="w"> </span><span class="n">userContext</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="real-subject">Real subject<a hidden class="anchor" aria-hidden="true" href="#real-subject">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">RealDocumentService</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">DocumentService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">documentId</span><span class="p">,</span><span class="w"> </span><span class="n">UserContext</span><span class="w"> </span><span class="n">userContext</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;Document content for &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">documentId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="proxy">Proxy<a hidden class="anchor" aria-hidden="true" href="#proxy">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AuthorizationDocumentProxy</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">DocumentService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">DocumentService</span><span class="w"> </span><span class="n">delegate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">AuthorizationDocumentProxy</span><span class="p">(</span><span class="n">DocumentService</span><span class="w"> </span><span class="n">delegate</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">delegate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">delegate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">read</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">documentId</span><span class="p">,</span><span class="w"> </span><span class="n">UserContext</span><span class="w"> </span><span class="n">userContext</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">userContext</span><span class="p">.</span><span class="na">hasRole</span><span class="p">(</span><span class="s">&#34;DOCUMENT_READ&#34;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">SecurityException</span><span class="p">(</span><span class="s">&#34;User is not authorized to read documents&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">delegate</span><span class="p">.</span><span class="na">read</span><span class="p">(</span><span class="n">documentId</span><span class="p">,</span><span class="w"> </span><span class="n">userContext</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">record</span> <span class="nc">UserContext</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">java</span><span class="p">.</span><span class="na">util</span><span class="p">.</span><span class="na">Set</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">roles</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">hasRole</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">role</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">roles</span><span class="p">.</span><span class="na">contains</span><span class="p">(</span><span class="n">role</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This keeps authorization at the boundary and domain behavior in the real service.</p>
+<hr>
+<h2 id="java-example-virtual-proxy-for-lazy-loading">Java Example: Virtual Proxy for Lazy Loading<a hidden class="anchor" aria-hidden="true" href="#java-example-virtual-proxy-for-lazy-loading">#</a></h2>
+<p>A virtual proxy is useful when object initialization is expensive.</p>
+<h3 id="subject-interface-1">Subject interface<a hidden class="anchor" aria-hidden="true" href="#subject-interface-1">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">ReportRenderer</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">String</span><span class="w"> </span><span class="nf">render</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="expensive-real-subject">Expensive real subject<a hidden class="anchor" aria-hidden="true" href="#expensive-real-subject">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">HeavyReportRenderer</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ReportRenderer</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">HeavyReportRenderer</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// simulate expensive startup</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Thread</span><span class="p">.</span><span class="na">sleep</span><span class="p">(</span><span class="n">1000</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">InterruptedException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">Thread</span><span class="p">.</span><span class="na">currentThread</span><span class="p">().</span><span class="na">interrupt</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Initialization interrupted&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">render</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;Rendered high-fidelity report&#34;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="lazy-proxy">Lazy proxy<a hidden class="anchor" aria-hidden="true" href="#lazy-proxy">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">LazyReportRendererProxy</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ReportRenderer</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">volatile</span><span class="w"> </span><span class="n">ReportRenderer</span><span class="w"> </span><span class="n">delegate</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">render</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">delegate</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="kd">synchronized</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">delegate</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                    </span><span class="n">delegate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">HeavyReportRenderer</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">delegate</span><span class="p">.</span><span class="na">render</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This defers expensive initialization until the first real call.</p>
+<hr>
+<h2 id="java-example-remote-proxy-boundary">Java Example: Remote Proxy Boundary<a hidden class="anchor" aria-hidden="true" href="#java-example-remote-proxy-boundary">#</a></h2>
+<p>A remote proxy makes local code look like a local call while delegating over the network.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">CustomerProfileClient</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">CustomerProfile</span><span class="w"> </span><span class="nf">getProfile</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">customerId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">HttpCustomerProfileClientProxy</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">CustomerProfileClient</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">HttpGateway</span><span class="w"> </span><span class="n">gateway</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">HttpCustomerProfileClientProxy</span><span class="p">(</span><span class="n">HttpGateway</span><span class="w"> </span><span class="n">gateway</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">gateway</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gateway</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">CustomerProfile</span><span class="w"> </span><span class="nf">getProfile</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">customerId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">String</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#34;/customers/&#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">customerId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">String</span><span class="w"> </span><span class="n">json</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">gateway</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">path</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">CustomerProfile</span><span class="p">.</span><span class="na">fromJson</span><span class="p">(</span><span class="n">json</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">record</span> <span class="nc">CustomerProfile</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">customerId</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">email</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">static</span><span class="w"> </span><span class="n">CustomerProfile</span><span class="w"> </span><span class="nf">fromJson</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">json</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// simplified parsing for example purposes</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CustomerProfile</span><span class="p">(</span><span class="s">&#34;customer-123&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;user@example.com&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This isolates transport and serialization concerns from business services.</p>
+<hr>
+<h2 id="common-proxy-variants">Common Proxy Variants<a hidden class="anchor" aria-hidden="true" href="#common-proxy-variants">#</a></h2>
+<p>In practice, you will see these proxy types frequently:</p>
+<ul>
+<li><strong>Protection proxy</strong>: enforces authorization/policy</li>
+<li><strong>Virtual proxy</strong>: lazy-loads expensive objects</li>
+<li><strong>Remote proxy</strong>: represents remote services locally</li>
+<li><strong>Caching proxy</strong>: caches results before delegating</li>
+<li><strong>Logging/monitoring proxy</strong>: captures telemetry around calls</li>
+</ul>
+<p>These are all the same structural idea: same interface, controlled delegation.</p>
+<hr>
+<h2 id="proxy-vs-decorator-vs-adapter">Proxy vs Decorator vs Adapter<a hidden class="anchor" aria-hidden="true" href="#proxy-vs-decorator-vs-adapter">#</a></h2>
+<p>These patterns are similar structurally but different in intent:</p>
+<ul>
+<li><strong>Proxy</strong> controls access to an object.</li>
+<li><strong>Decorator</strong> adds behavior/responsibilities compositionally.</li>
+<li><strong>Adapter</strong> translates incompatible interfaces.</li>
+</ul>
+<p>If your concern is access control, lifecycle, remoting, or policy gates, Proxy is usually the right fit.</p>
+<hr>
+<h2 id="solid-alignment">SOLID Alignment<a hidden class="anchor" aria-hidden="true" href="#solid-alignment">#</a></h2>
+<p>Proxy can reinforce SOLID principles when applied deliberately:</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>Control concerns (auth, caching, remoting) live in proxies; domain logic remains in real subjects.</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>You can add new proxy behaviors without modifying existing subject implementations.</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>Clients depend on stable interfaces, not concrete classes or transport details.</p>
+<p>This is why Proxy scales well in layered Java architectures.</p>
+<hr>
+<h2 id="common-mistakes">Common Mistakes<a hidden class="anchor" aria-hidden="true" href="#common-mistakes">#</a></h2>
+<h3 id="1-putting-domain-logic-in-the-proxy">1. Putting domain logic in the proxy<a hidden class="anchor" aria-hidden="true" href="#1-putting-domain-logic-in-the-proxy">#</a></h3>
+<p>Proxy should govern access and delegation, not become the business service.</p>
+<h3 id="2-hiding-expensive-side-effects">2. Hiding expensive side effects<a hidden class="anchor" aria-hidden="true" href="#2-hiding-expensive-side-effects">#</a></h3>
+<p>If a proxy adds network calls or retries, document it. “Looks local” can mislead performance expectations.</p>
+<h3 id="3-building-deep-proxy-chains-without-observability">3. Building deep proxy chains without observability<a hidden class="anchor" aria-hidden="true" href="#3-building-deep-proxy-chains-without-observability">#</a></h3>
+<p>Multiple wrappers can obscure behavior. Use clear naming and telemetry.</p>
+<h3 id="4-weak-error-semantics">4. Weak error semantics<a hidden class="anchor" aria-hidden="true" href="#4-weak-error-semantics">#</a></h3>
+<p>Proxies should normalize errors thoughtfully, not swallow failure details that operators need.</p>
+<hr>
+<h2 id="practical-guidance-for-java-teams">Practical Guidance for Java Teams<a hidden class="anchor" aria-hidden="true" href="#practical-guidance-for-java-teams">#</a></h2>
+<p>Use Proxy when:</p>
+<ul>
+<li>you need policy enforcement at call boundaries</li>
+<li>object creation should be deferred</li>
+<li>remote integration details should stay isolated</li>
+<li>cross-cutting control concerns need consistency</li>
+</ul>
+<p>Avoid Proxy when:</p>
+<ul>
+<li>direct invocation is already simple and safe</li>
+<li>added indirection provides no operational value</li>
+<li>proxy layers make debugging harder than the control benefit they provide</li>
+</ul>
+<p>Pattern discipline means using proxy for real control concerns, not cosmetic abstraction.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Proxy pattern is one of the most practical patterns in enterprise Java because it handles a common reality: access to behavior often needs governance.</p>
+<p>Used well, Proxy keeps interfaces stable while enforcing authorization, lazy loading, remote boundaries, and operational policy in one place. Used poorly, it hides complexity and obscures performance characteristics.</p>
+<p>The right approach is straightforward:</p>
+<ul>
+<li>keep proxy intent explicit</li>
+<li>keep subject interfaces clean</li>
+<li>separate control concerns from domain concerns</li>
+<li>test policy and delegation paths as production-critical behavior</li>
+</ul>
+<p>That is how you add control without contaminating core business logic.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

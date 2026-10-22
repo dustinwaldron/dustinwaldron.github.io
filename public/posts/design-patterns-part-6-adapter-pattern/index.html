@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: Adapter Pattern - Integrating Incompatible Interfaces Cleanly | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-focused guide to the Adapter pattern, including object vs class adapters, real-world integration examples, and common trade-offs.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-6-adapter-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-6-adapter-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-6-adapter-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Adapter Pattern - Integrating Incompatible Interfaces Cleanly">
+  <meta property="og:description" content="A practical Java-focused guide to the Adapter pattern, including object vs class adapters, real-world integration examples, and common trade-offs.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-07T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-07T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Adapter Pattern - Integrating Incompatible Interfaces Cleanly">
+<meta name="twitter:description" content="A practical Java-focused guide to the Adapter pattern, including object vs class adapters, real-world integration examples, and common trade-offs.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Adapter Pattern - Integrating Incompatible Interfaces Cleanly",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-6-adapter-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Adapter Pattern - Integrating Incompatible Interfaces Cleanly",
+  "name": "Design Patterns: Adapter Pattern - Integrating Incompatible Interfaces Cleanly",
+  "description": "A practical Java-focused guide to the Adapter pattern, including object vs class adapters, real-world integration examples, and common trade-offs.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The Adapter Pattern Solves an Integration Boundary Problem Most systems do not fail because of business logic alone. They fail at boundaries.\nYou have a stable internal API. A vendor SDK arrives with a different method shape. A legacy library returns incompatible types. A migration introduces an old interface and a new one that must coexist for a quarter.\nThat is exactly where the Adapter pattern earns its keep.\nThe Adapter pattern lets classes with incompatible interfaces collaborate by converting one interface into another expected by the client. In Java systems, this is one of the highest-leverage structural patterns because it preserves internal design while allowing external variation.\nAdapter is not about clever indirection. It is about isolating incompatibility in one predictable place.\nThe Gang of Four Intent The Gang of Four defines Adapter as:\nConvert the interface of a class into another interface clients expect.\nIn practical terms:\nclient code keeps using a stable target interface adapter translates calls to an incompatible adaptee external API differences stay out of business logic This keeps change localized and reduces ripple effects across the codebase.\nWhy Teams Need This Pattern Without an adapter, teams often sprinkle translation logic across services:\nrandom type mapping in controllers conditional branches for provider-specific calls duplicated conversion logic in multiple classes That quickly becomes hard to maintain.\nA disciplined adapter layer gives you:\nclear ownership of integration logic easier testing of conversion behavior lower coupling between domain code and vendor APIs safer provider swaps and migrations When boundary complexity is real, Adapter is one of the cleanest containment strategies.\nJava Example: Payment Provider SDK Integration Assume your internal domain uses this interface:\npublic interface PaymentProcessor { PaymentResult charge(String customerId, long amountCents); } But a third-party SDK uses incompatible names and types:\npublic class LegacyPayClient { public LegacyPayResponse submitPayment(String accountRef, double amountDollars) { // SDK call return new LegacyPayResponse(\"OK\", \"txn-123\"); } } public class LegacyPayResponse { private final String status; private final String transactionId; public LegacyPayResponse(String status, String transactionId) { this.status = status; this.transactionId = transactionId; } public String getStatus() { return status; } public String getTransactionId() { return transactionId; } } Adapter:\npublic class LegacyPayAdapter implements PaymentProcessor { private final LegacyPayClient legacyPayClient; public LegacyPayAdapter(LegacyPayClient legacyPayClient) { this.legacyPayClient = legacyPayClient; } @Override public PaymentResult charge(String customerId, long amountCents) { double amountDollars = amountCents / 100.0; LegacyPayResponse response = legacyPayClient.submitPayment(customerId, amountDollars); boolean success = \"OK\".equals(response.getStatus()); return new PaymentResult(success, response.getTransactionId()); } } Domain result:\npublic record PaymentResult(boolean success, String transactionId) {} Now the rest of the system only depends on PaymentProcessor, not on vendor-specific semantics.\nAnother Java Example: Legacy Logger to Modern Interface Internal logging contract:\npublic interface AppLogger { void info(String message); void error(String message, Throwable throwable); } Legacy logger:\npublic class LegacyLogger { public void logInfo(String payload) { System.out.println(\"INFO: \" + payload); } public void logError(String payload, String stackTrace) { System.err.println(\"ERROR: \" + payload + \" | \" + stackTrace); } } Adapter:\nimport java.io.PrintWriter; import java.io.StringWriter; public class LegacyLoggerAdapter implements AppLogger { private final LegacyLogger legacyLogger; public LegacyLoggerAdapter(LegacyLogger legacyLogger) { this.legacyLogger = legacyLogger; } @Override public void info(String message) { legacyLogger.logInfo(message); } @Override public void error(String message, Throwable throwable) { StringWriter sw = new StringWriter(); throwable.printStackTrace(new PrintWriter(sw)); legacyLogger.logError(message, sw.toString()); } } This isolates old logging semantics while preserving modern call sites.\nObject Adapter vs Class Adapter There are two common adapter forms:\nObject adapter (composition) The adapter holds an instance of the adaptee and delegates calls.\npreferred in Java flexible and testable works with final classes and third-party SDKs Class adapter (inheritance) The adapter subclasses the adaptee and implements target interface.\nless common in Java because of single inheritance constraints tighter coupling to adaptee implementation In real Java systems, object adapters are typically the right default.\nAdapter vs Facade vs Decorator These are often confused:\nAdapter translates one interface into another. Facade simplifies a complex subsystem with a new unified interface. Decorator adds behavior to an object while preserving the same interface. If your main issue is interface incompatibility, use Adapter.\nSOLID Alignment Adapter maps cleanly to SOLID principles:\nSingle Responsibility Principle Translation logic lives in adapter classes, not spread across business services.\nOpen/Closed Principle You can add new adapters for new providers without rewriting existing domain workflows.\nDependency Inversion Principle Core services depend on internal abstractions (PaymentProcessor, AppLogger), not vendor implementations.\nThis is exactly how teams keep core logic stable while integrations evolve.\nCommon Mistakes 1. Leaking adaptee types through the target interface If target methods expose vendor DTOs, the boundary is not actually isolated.\n2. Putting business rules in adapters Adapters should translate and normalize, not own domain decisions.\n3. Creating one giant adapter for multiple unrelated concerns Keep adapters narrow and purpose-specific. Large “integration god classes” become maintenance hazards.\n4. Skipping tests for conversion semantics Adapter logic should be tested for data mapping, edge cases, and error normalization. This is high-value boundary code.\nPractical Guidance for Production Java Code Use Adapter when:\nintegrating third-party or legacy libraries migrating between APIs while preserving internal contracts isolating provider-specific request/response mapping Avoid Adapter when:\ninterfaces are already compatible a simple wrapper method is enough and no translation boundary is needed you are introducing unnecessary abstraction for hypothetical future integrations Pattern discipline matters: adapters should reduce complexity, not create ceremony.\nFinal Thoughts The Adapter pattern is one of the most practical patterns in enterprise software because integration boundaries are where architectural friction usually lives.\nIn Java, a clean adapter layer lets teams preserve stable domain interfaces while integrating incompatible external APIs safely and predictably.\nUsed well, Adapter localizes change, improves testability, and keeps business logic insulated from vendor churn. Used poorly, it becomes a thin façade for leaked coupling.\nThe right approach is straightforward:\ndefine clean internal contracts translate at boundaries keep adapters narrow and explicit test mappings like production-critical behavior That is how you integrate fast without letting boundary complexity infect the core system.\n",
+  "wordCount" : "977",
+  "inLanguage": "en",
+  "datePublished": "2026-10-07T11:00:00-04:00",
+  "dateModified": "2026-10-07T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-6-adapter-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Adapter Pattern - Integrating Incompatible Interfaces Cleanly
+    </h1>
+    <div class="post-description">
+      A practical Java-focused guide to the Adapter pattern, including object vs class adapters, real-world integration examples, and common trade-offs.
+    </div>
+    <div class="post-meta"><span title='2026-10-07 11:00:00 -0400 EDT'>October 7, 2026</span>&nbsp;·&nbsp;<span>5 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-adapter-pattern-solves-an-integration-boundary-problem">The Adapter Pattern Solves an Integration Boundary Problem</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#why-teams-need-this-pattern">Why Teams Need This Pattern</a></li>
+    <li><a href="#java-example-payment-provider-sdk-integration">Java Example: Payment Provider SDK Integration</a></li>
+    <li><a href="#another-java-example-legacy-logger-to-modern-interface">Another Java Example: Legacy Logger to Modern Interface</a></li>
+    <li><a href="#object-adapter-vs-class-adapter">Object Adapter vs Class Adapter</a>
+      <ul>
+        <li><a href="#object-adapter-composition">Object adapter (composition)</a></li>
+        <li><a href="#class-adapter-inheritance">Class adapter (inheritance)</a></li>
+      </ul>
+    </li>
+    <li><a href="#adapter-vs-facade-vs-decorator">Adapter vs Facade vs Decorator</a></li>
+    <li><a href="#solid-alignment">SOLID Alignment</a>
+      <ul>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#common-mistakes">Common Mistakes</a>
+      <ul>
+        <li><a href="#1-leaking-adaptee-types-through-the-target-interface">1. Leaking adaptee types through the target interface</a></li>
+        <li><a href="#2-putting-business-rules-in-adapters">2. Putting business rules in adapters</a></li>
+        <li><a href="#3-creating-one-giant-adapter-for-multiple-unrelated-concerns">3. Creating one giant adapter for multiple unrelated concerns</a></li>
+        <li><a href="#4-skipping-tests-for-conversion-semantics">4. Skipping tests for conversion semantics</a></li>
+      </ul>
+    </li>
+    <li><a href="#practical-guidance-for-production-java-code">Practical Guidance for Production Java Code</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-adapter-pattern-solves-an-integration-boundary-problem">The Adapter Pattern Solves an Integration Boundary Problem<a hidden class="anchor" aria-hidden="true" href="#the-adapter-pattern-solves-an-integration-boundary-problem">#</a></h2>
+<p>Most systems do not fail because of business logic alone. They fail at boundaries.</p>
+<p>You have a stable internal API. A vendor SDK arrives with a different method shape. A legacy library returns incompatible types. A migration introduces an old interface and a new one that must coexist for a quarter.</p>
+<p>That is exactly where the Adapter pattern earns its keep.</p>
+<p>The Adapter pattern lets classes with incompatible interfaces collaborate by converting one interface into another expected by the client. In Java systems, this is one of the highest-leverage structural patterns because it preserves internal design while allowing external variation.</p>
+<p>Adapter is not about clever indirection. It is about isolating incompatibility in one predictable place.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four defines Adapter as:</p>
+<blockquote>
+<p>Convert the interface of a class into another interface clients expect.</p>
+</blockquote>
+<p>In practical terms:</p>
+<ul>
+<li>client code keeps using a stable target interface</li>
+<li>adapter translates calls to an incompatible adaptee</li>
+<li>external API differences stay out of business logic</li>
+</ul>
+<p>This keeps change localized and reduces ripple effects across the codebase.</p>
+<hr>
+<h2 id="why-teams-need-this-pattern">Why Teams Need This Pattern<a hidden class="anchor" aria-hidden="true" href="#why-teams-need-this-pattern">#</a></h2>
+<p>Without an adapter, teams often sprinkle translation logic across services:</p>
+<ul>
+<li>random type mapping in controllers</li>
+<li>conditional branches for provider-specific calls</li>
+<li>duplicated conversion logic in multiple classes</li>
+</ul>
+<p>That quickly becomes hard to maintain.</p>
+<p>A disciplined adapter layer gives you:</p>
+<ul>
+<li>clear ownership of integration logic</li>
+<li>easier testing of conversion behavior</li>
+<li>lower coupling between domain code and vendor APIs</li>
+<li>safer provider swaps and migrations</li>
+</ul>
+<p>When boundary complexity is real, Adapter is one of the cleanest containment strategies.</p>
+<hr>
+<h2 id="java-example-payment-provider-sdk-integration">Java Example: Payment Provider SDK Integration<a hidden class="anchor" aria-hidden="true" href="#java-example-payment-provider-sdk-integration">#</a></h2>
+<p>Assume your internal domain uses this interface:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">PaymentProcessor</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">PaymentResult</span><span class="w"> </span><span class="nf">charge</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">customerId</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">amountCents</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>But a third-party SDK uses incompatible names and types:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">LegacyPayClient</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">LegacyPayResponse</span><span class="w"> </span><span class="nf">submitPayment</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">accountRef</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">amountDollars</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// SDK call</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">LegacyPayResponse</span><span class="p">(</span><span class="s">&#34;OK&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;txn-123&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">LegacyPayResponse</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">status</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">transactionId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">LegacyPayResponse</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">status</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">transactionId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">status</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">status</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">transactionId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">transactionId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">getStatus</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">status</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">getTransactionId</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">transactionId</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Adapter:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">LegacyPayAdapter</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">PaymentProcessor</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">LegacyPayClient</span><span class="w"> </span><span class="n">legacyPayClient</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">LegacyPayAdapter</span><span class="p">(</span><span class="n">LegacyPayClient</span><span class="w"> </span><span class="n">legacyPayClient</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">legacyPayClient</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legacyPayClient</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">PaymentResult</span><span class="w"> </span><span class="nf">charge</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">customerId</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">amountCents</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kt">double</span><span class="w"> </span><span class="n">amountDollars</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">amountCents</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">100</span><span class="p">.</span><span class="na">0</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">LegacyPayResponse</span><span class="w"> </span><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legacyPayClient</span><span class="p">.</span><span class="na">submitPayment</span><span class="p">(</span><span class="n">customerId</span><span class="p">,</span><span class="w"> </span><span class="n">amountDollars</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kt">boolean</span><span class="w"> </span><span class="n">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&#34;OK&#34;</span><span class="p">.</span><span class="na">equals</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="na">getStatus</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">PaymentResult</span><span class="p">(</span><span class="n">success</span><span class="p">,</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="na">getTransactionId</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Domain result:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">record</span> <span class="nc">PaymentResult</span><span class="p">(</span><span class="kt">boolean</span><span class="w"> </span><span class="n">success</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">transactionId</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span></code></pre></div><p>Now the rest of the system only depends on <code>PaymentProcessor</code>, not on vendor-specific semantics.</p>
+<hr>
+<h2 id="another-java-example-legacy-logger-to-modern-interface">Another Java Example: Legacy Logger to Modern Interface<a hidden class="anchor" aria-hidden="true" href="#another-java-example-legacy-logger-to-modern-interface">#</a></h2>
+<p>Internal logging contract:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">AppLogger</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">info</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">error</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">Throwable</span><span class="w"> </span><span class="n">throwable</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Legacy logger:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">LegacyLogger</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">logInfo</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">payload</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;INFO: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">payload</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">logError</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">payload</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">stackTrace</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">err</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;ERROR: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">payload</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34; | &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">stackTrace</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Adapter:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.io.PrintWriter</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.io.StringWriter</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">LegacyLoggerAdapter</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">AppLogger</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">LegacyLogger</span><span class="w"> </span><span class="n">legacyLogger</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">LegacyLoggerAdapter</span><span class="p">(</span><span class="n">LegacyLogger</span><span class="w"> </span><span class="n">legacyLogger</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">legacyLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">legacyLogger</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">info</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">legacyLogger</span><span class="p">.</span><span class="na">logInfo</span><span class="p">(</span><span class="n">message</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">error</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">Throwable</span><span class="w"> </span><span class="n">throwable</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">StringWriter</span><span class="w"> </span><span class="n">sw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">StringWriter</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">throwable</span><span class="p">.</span><span class="na">printStackTrace</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">PrintWriter</span><span class="p">(</span><span class="n">sw</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">legacyLogger</span><span class="p">.</span><span class="na">logError</span><span class="p">(</span><span class="n">message</span><span class="p">,</span><span class="w"> </span><span class="n">sw</span><span class="p">.</span><span class="na">toString</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This isolates old logging semantics while preserving modern call sites.</p>
+<hr>
+<h2 id="object-adapter-vs-class-adapter">Object Adapter vs Class Adapter<a hidden class="anchor" aria-hidden="true" href="#object-adapter-vs-class-adapter">#</a></h2>
+<p>There are two common adapter forms:</p>
+<h3 id="object-adapter-composition">Object adapter (composition)<a hidden class="anchor" aria-hidden="true" href="#object-adapter-composition">#</a></h3>
+<p>The adapter holds an instance of the adaptee and delegates calls.</p>
+<ul>
+<li>preferred in Java</li>
+<li>flexible and testable</li>
+<li>works with final classes and third-party SDKs</li>
+</ul>
+<h3 id="class-adapter-inheritance">Class adapter (inheritance)<a hidden class="anchor" aria-hidden="true" href="#class-adapter-inheritance">#</a></h3>
+<p>The adapter subclasses the adaptee and implements target interface.</p>
+<ul>
+<li>less common in Java because of single inheritance constraints</li>
+<li>tighter coupling to adaptee implementation</li>
+</ul>
+<p>In real Java systems, object adapters are typically the right default.</p>
+<hr>
+<h2 id="adapter-vs-facade-vs-decorator">Adapter vs Facade vs Decorator<a hidden class="anchor" aria-hidden="true" href="#adapter-vs-facade-vs-decorator">#</a></h2>
+<p>These are often confused:</p>
+<ul>
+<li><strong>Adapter</strong> translates one interface into another.</li>
+<li><strong>Facade</strong> simplifies a complex subsystem with a new unified interface.</li>
+<li><strong>Decorator</strong> adds behavior to an object while preserving the same interface.</li>
+</ul>
+<p>If your main issue is interface incompatibility, use Adapter.</p>
+<hr>
+<h2 id="solid-alignment">SOLID Alignment<a hidden class="anchor" aria-hidden="true" href="#solid-alignment">#</a></h2>
+<p>Adapter maps cleanly to SOLID principles:</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>Translation logic lives in adapter classes, not spread across business services.</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>You can add new adapters for new providers without rewriting existing domain workflows.</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>Core services depend on internal abstractions (<code>PaymentProcessor</code>, <code>AppLogger</code>), not vendor implementations.</p>
+<p>This is exactly how teams keep core logic stable while integrations evolve.</p>
+<hr>
+<h2 id="common-mistakes">Common Mistakes<a hidden class="anchor" aria-hidden="true" href="#common-mistakes">#</a></h2>
+<h3 id="1-leaking-adaptee-types-through-the-target-interface">1. Leaking adaptee types through the target interface<a hidden class="anchor" aria-hidden="true" href="#1-leaking-adaptee-types-through-the-target-interface">#</a></h3>
+<p>If target methods expose vendor DTOs, the boundary is not actually isolated.</p>
+<h3 id="2-putting-business-rules-in-adapters">2. Putting business rules in adapters<a hidden class="anchor" aria-hidden="true" href="#2-putting-business-rules-in-adapters">#</a></h3>
+<p>Adapters should translate and normalize, not own domain decisions.</p>
+<h3 id="3-creating-one-giant-adapter-for-multiple-unrelated-concerns">3. Creating one giant adapter for multiple unrelated concerns<a hidden class="anchor" aria-hidden="true" href="#3-creating-one-giant-adapter-for-multiple-unrelated-concerns">#</a></h3>
+<p>Keep adapters narrow and purpose-specific. Large “integration god classes” become maintenance hazards.</p>
+<h3 id="4-skipping-tests-for-conversion-semantics">4. Skipping tests for conversion semantics<a hidden class="anchor" aria-hidden="true" href="#4-skipping-tests-for-conversion-semantics">#</a></h3>
+<p>Adapter logic should be tested for data mapping, edge cases, and error normalization. This is high-value boundary code.</p>
+<hr>
+<h2 id="practical-guidance-for-production-java-code">Practical Guidance for Production Java Code<a hidden class="anchor" aria-hidden="true" href="#practical-guidance-for-production-java-code">#</a></h2>
+<p>Use Adapter when:</p>
+<ul>
+<li>integrating third-party or legacy libraries</li>
+<li>migrating between APIs while preserving internal contracts</li>
+<li>isolating provider-specific request/response mapping</li>
+</ul>
+<p>Avoid Adapter when:</p>
+<ul>
+<li>interfaces are already compatible</li>
+<li>a simple wrapper method is enough and no translation boundary is needed</li>
+<li>you are introducing unnecessary abstraction for hypothetical future integrations</li>
+</ul>
+<p>Pattern discipline matters: adapters should reduce complexity, not create ceremony.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Adapter pattern is one of the most practical patterns in enterprise software because integration boundaries are where architectural friction usually lives.</p>
+<p>In Java, a clean adapter layer lets teams preserve stable domain interfaces while integrating incompatible external APIs safely and predictably.</p>
+<p>Used well, Adapter localizes change, improves testability, and keeps business logic insulated from vendor churn. Used poorly, it becomes a thin façade for leaked coupling.</p>
+<p>The right approach is straightforward:</p>
+<ul>
+<li>define clean internal contracts</li>
+<li>translate at boundaries</li>
+<li>keep adapters narrow and explicit</li>
+<li>test mappings like production-critical behavior</li>
+</ul>
+<p>That is how you integrate fast without letting boundary complexity infect the core system.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="en" dir="auto" data-theme="auto">
 
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
+<meta name="robots" content="index, follow">
 <title>Architecture | Dustin Waldron</title>
 <meta name="keywords" content="">
 <meta name="description" content="A personal portfolio of tech ramblings, pet projects, and overly stimulated opinions">
 <meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/tags/architecture/">
+<link rel="canonical" href="https://dustinwaldron.github.io/tags/architecture/">
 <link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon.ico">
-<link rel="apple-touch-icon" href="http://localhost:1313/favicon.ico">
-<link rel="mask-icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" type="application/rss+xml" href="http://localhost:1313/tags/architecture/index.xml" title="rss">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/tags/architecture/">
+<link rel="alternate" type="application/rss+xml" href="https://dustinwaldron.github.io/tags/architecture/index.xml" title="rss">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/tags/architecture/">
 <noscript>
     <style>
         #theme-toggle,
@@ -67,44 +67,53 @@
         document.querySelector("html").dataset.theme = 'light';
     }
 
-</script>
+</script><meta property="og:url" content="https://dustinwaldron.github.io/tags/architecture/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Architecture">
+  <meta property="og:description" content="A personal portfolio of tech ramblings, pet projects, and overly stimulated opinions">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Architecture">
+<meta name="twitter:description" content="A personal portfolio of tech ramblings, pet projects, and overly stimulated opinions">
+
 </head>
 <body class="list" id="top">
     <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
             <div class="logo-switches">
             </div>
         </div>
         <ul id="menu">
             <li>
-                <a href="http://localhost:1313/about/" title="About">
+                <a href="https://dustinwaldron.github.io/about/" title="About">
                     <span>About</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/posts/" title="Posts">
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
                     <span>Posts</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/projects/" title="Projects">
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
                     <span>Projects</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
                     <span>Search</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/categories/" title="Categories">
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
                     <span>Categories</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/tags/" title="Tags">
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
                     <span>Tags</span>
                 </a>
             </li>
@@ -120,22 +129,165 @@
 
 <article class="post-entry tag-entry"> 
   <header class="entry-header">
-    <h2 class="entry-hint-parent">Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth
+    <h2 class="entry-hint-parent">Design Patterns: Chain of Responsibility Pattern - Routing Requests Through Composable Handlers
     </h2>
   </header>
   <div class="entry-content">
-    <p>Design Patterns Are Not a Fancy Acronym. They Are a Professional Discipline. When I review code, the difference between a team that is shipping features and a team that is building durable systems is usually not raw intelligence. It is the discipline of design.
-The best engineering teams do not treat design as a luxury. They treat it as a force multiplier.
-Design patterns are one of the clearest expressions of that discipline. They are not “pattern matching” for the sake of aesthetics. They are battle-tested ways to structure code so that software is easier to understand, easier to extend, and less likely to collapse under the weight of change.
+    <p>The Chain of Responsibility Pattern Solves a Routing and Decision Flow Problem Many systems process requests through a sequence of checks and transformations:
+authentication authorization validation enrichment execution The anti-pattern is one large method that does all of this with nested branching. It becomes fragile, hard to test, and difficult to evolve when steps change.
+The Chain of Responsibility pattern solves this by passing a request through a chain of handlers. Each handler can process the request, pass it onward, or stop the chain.
 ...</p>
   </div>
-  <footer class="entry-footer"><span title='2026-10-20 13:00:00 -0400 EDT'>October 20, 2026</span>&nbsp;·&nbsp;<span>11 min</span></footer>
-  <a class="entry-link" aria-label="post link to Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth" href="http://localhost:1313/posts/design-patterns-introduction/"></a>
+  <footer class="entry-footer"><span title='2026-10-17 11:00:00 -0400 EDT'>October 17, 2026</span>&nbsp;·&nbsp;<span>5 min</span></footer>
+  <a class="entry-link" aria-label="post link to Design Patterns: Chain of Responsibility Pattern - Routing Requests Through Composable Handlers" href="https://dustinwaldron.github.io/posts/design-patterns-part-16-chain-of-responsibility-pattern/"></a>
 </article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Design Patterns: Command Pattern - Turning Requests into First-Class Objects
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>The Command Pattern Solves a Request Management Problem In many systems, actions are not just method calls. They are business requests with lifecycle needs:
+execute now or later queue and retry audit who requested what support undo/redo replay during recovery When request logic is embedded directly in UI handlers, controllers, or services, these capabilities become difficult to add consistently.
+The Command pattern solves this by encapsulating a request as an object. The request object carries execution behavior (and optionally undo behavior), allowing requests to be queued, logged, composed, retried, and replayed in a structured way.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-10-16 11:00:00 -0400 EDT'>October 16, 2026</span>&nbsp;·&nbsp;<span>5 min</span></footer>
+  <a class="entry-link" aria-label="post link to Design Patterns: Command Pattern - Turning Requests into First-Class Objects" href="https://dustinwaldron.github.io/posts/design-patterns-part-15-command-pattern/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Design Patterns: Iterator Pattern - Traversing Collections Without Exposing Internals
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>The Iterator Pattern Solves a Traversal Encapsulation Problem Collections are everywhere in software systems, but traversal logic should not leak data structure internals.
+Without a clear iteration contract, client code often becomes tightly coupled to:
+index-based loops tied to list implementations tree traversal details embedded in services ad hoc pagination logic repeated in multiple classes The Iterator pattern solves this by providing a standard way to access elements sequentially without exposing the underlying representation.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-10-15 11:00:00 -0400 EDT'>October 15, 2026</span>&nbsp;·&nbsp;<span>5 min</span></footer>
+  <a class="entry-link" aria-label="post link to Design Patterns: Iterator Pattern - Traversing Collections Without Exposing Internals" href="https://dustinwaldron.github.io/posts/design-patterns-part-14-iterator-pattern/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Design Patterns: Observer Pattern - Decoupling Event Producers from Event Consumers
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>The Observer Pattern Solves a Change Propagation Problem In most systems, important events trigger follow-up work:
+an order is created, then inventory is reserved a payment succeeds, then receipts are sent a user registers, then analytics and onboarding flows run The anti-pattern is coupling all of those actions directly into one service. That creates rigid orchestration, fragile dependencies, and high regression risk whenever subscribers change.
+The Observer pattern solves this by defining a one-to-many dependency between objects so that when one object changes state, all dependents are notified automatically.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-10-14 11:00:00 -0400 EDT'>October 14, 2026</span>&nbsp;·&nbsp;<span>5 min</span></footer>
+  <a class="entry-link" aria-label="post link to Design Patterns: Observer Pattern - Decoupling Event Producers from Event Consumers" href="https://dustinwaldron.github.io/posts/design-patterns-part-13-observer-pattern/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Design Patterns: State Pattern - Modeling Behavior Through Explicit State Transitions
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>The State Pattern Solves a Workflow Complexity Problem Many systems have entities whose behavior depends on lifecycle stage:
+orders move from created to paid to shipped accounts move from active to suspended to closed documents move from draft to approved to archived jobs move from queued to running to completed/failed The common failure mode is to keep lifecycle logic in one class with large conditional branches:
+if (status == CREATED) { ... } else if (status == PAID) { ... } else if (status == SHIPPED) { ... } As transitions and rules grow, that central class becomes fragile and hard to reason about.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-10-13 11:00:00 -0400 EDT'>October 13, 2026</span>&nbsp;·&nbsp;<span>6 min</span></footer>
+  <a class="entry-link" aria-label="post link to Design Patterns: State Pattern - Modeling Behavior Through Explicit State Transitions" href="https://dustinwaldron.github.io/posts/design-patterns-part-12-state-pattern/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Design Patterns: Strategy Pattern - Replacing Conditionals with Interchangeable Behavior
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>The Strategy Pattern Solves a Behavior Variation Problem Many systems start with one algorithm. Then product requirements split:
+pricing rules vary by customer tier retry policy varies by endpoint sorting logic varies by context shipping logic varies by region and SLA The common anti-pattern is a growing if/else or switch chain embedded in one class.
+That design works briefly, then becomes fragile. Every new variation requires editing existing logic, retesting broad paths, and managing side effects from unrelated branches.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-10-12 11:00:00 -0400 EDT'>October 12, 2026</span>&nbsp;·&nbsp;<span>5 min</span></footer>
+  <a class="entry-link" aria-label="post link to Design Patterns: Strategy Pattern - Replacing Conditionals with Interchangeable Behavior" href="https://dustinwaldron.github.io/posts/design-patterns-part-11-strategy-pattern/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Design Patterns: Composite Pattern - Treating Trees and Leaves Uniformly
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>The Composite Pattern Solves a Hierarchy Handling Problem Many business domains are hierarchical:
+folders and files menus and menu items organizations and teams UI containers and widgets product bundles and single products The pain appears when client code must constantly ask:
+“Is this a leaf or a container?” “Do I call one method for a single item and another for groups?” That conditional branching spreads quickly and makes hierarchy logic harder to maintain.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-10-11 11:00:00 -0400 EDT'>October 11, 2026</span>&nbsp;·&nbsp;<span>6 min</span></footer>
+  <a class="entry-link" aria-label="post link to Design Patterns: Composite Pattern - Treating Trees and Leaves Uniformly" href="https://dustinwaldron.github.io/posts/design-patterns-part-10-composite-pattern/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Design Patterns: Proxy Pattern - Controlling Access Without Changing the Core
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>The Proxy Pattern Solves an Access and Control Problem In real systems, not every object should be called directly.
+Sometimes you need:
+authorization checks lazy loading for expensive resources remote invocation boundaries request throttling caching and fallback behavior The core object should still do its job, but callers may need controlled access to it.
+That is where the Proxy pattern fits.
+Proxy provides a substitute or placeholder for another object to control access to it. In Java systems, it is a practical way to insert operational policy around a component while keeping the component’s core logic unchanged.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-10-10 11:00:00 -0400 EDT'>October 10, 2026</span>&nbsp;·&nbsp;<span>5 min</span></footer>
+  <a class="entry-link" aria-label="post link to Design Patterns: Proxy Pattern - Controlling Access Without Changing the Core" href="https://dustinwaldron.github.io/posts/design-patterns-part-9-proxy-pattern/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Design Patterns: Facade Pattern - Simplifying Complex Subsystems with a Clean API
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>The Facade Pattern Solves a Complexity Exposure Problem As systems evolve, subsystems become layered and interdependent:
+validation persistence external API calls notifications auditing The problem is not that these components exist. The problem is when every caller has to understand and coordinate all of them directly.
+The Facade pattern addresses this by providing a unified, higher-level interface to a set of interfaces in a subsystem. In practice, Facade reduces cognitive load for callers while keeping subsystem complexity encapsulated.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-10-09 11:00:00 -0400 EDT'>October 9, 2026</span>&nbsp;·&nbsp;<span>5 min</span></footer>
+  <a class="entry-link" aria-label="post link to Design Patterns: Facade Pattern - Simplifying Complex Subsystems with a Clean API" href="https://dustinwaldron.github.io/posts/design-patterns-part-8-facade-pattern/"></a>
+</article>
+
+<article class="post-entry tag-entry"> 
+  <header class="entry-header">
+    <h2 class="entry-hint-parent">Design Patterns: Decorator Pattern - Extending Behavior Without Subclass Explosion
+    </h2>
+  </header>
+  <div class="entry-content">
+    <p>The Decorator Pattern Solves a Growth Problem in Object Design Most systems start with straightforward classes. Then requirements grow:
+add auditing add retries add metrics add caching add access control If each variation is handled with inheritance, class hierarchies expand quickly and become hard to maintain. You end up with brittle combinations like CachedRetriedAuditedService.
+The Decorator pattern solves this by attaching responsibilities to objects dynamically through composition. Instead of subclassing for every combination, you wrap objects with focused behavior layers.
+...</p>
+  </div>
+  <footer class="entry-footer"><span title='2026-10-08 11:00:00 -0400 EDT'>October 8, 2026</span>&nbsp;·&nbsp;<span>5 min</span></footer>
+  <a class="entry-link" aria-label="post link to Design Patterns: Decorator Pattern - Extending Behavior Without Subclass Explosion" href="https://dustinwaldron.github.io/posts/design-patterns-part-7-decorator-pattern/"></a>
+</article>
+<footer class="page-footer">
+  <nav class="pagination">
+    <a class="next" href="https://dustinwaldron.github.io/tags/architecture/page/2/">Next&nbsp;&nbsp;»
+    </a>
+  </nav>
+</footer>
     </main>
     
 <footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">Dustin Waldron</a></span> · 
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
 
     <span>
         Powered by

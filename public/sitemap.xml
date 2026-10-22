@@ -2,100 +2,180 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/tags/architecture/</loc>
-    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <loc>https://dustinwaldron.github.io/tags/architecture/</loc>
+    <lastmod>2026-10-17T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/best-practices/</loc>
-    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <loc>https://dustinwaldron.github.io/tags/best-practices/</loc>
+    <lastmod>2026-10-17T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/posts/design-patterns-introduction/</loc>
-    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-16-chain-of-responsibility-pattern/</loc>
+    <lastmod>2026-10-17T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/engineering/</loc>
-    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <loc>https://dustinwaldron.github.io/tags/engineering/</loc>
+    <lastmod>2026-10-17T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/</loc>
-    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <loc>https://dustinwaldron.github.io/</loc>
+    <lastmod>2026-10-17T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/java/</loc>
-    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <loc>https://dustinwaldron.github.io/tags/java/</loc>
+    <lastmod>2026-10-17T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/posts/</loc>
-    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <loc>https://dustinwaldron.github.io/posts/</loc>
+    <lastmod>2026-10-17T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/</loc>
-    <lastmod>2026-10-20T13:00:00-04:00</lastmod>
+    <loc>https://dustinwaldron.github.io/tags/</loc>
+    <lastmod>2026-10-17T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/blogging/</loc>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-15-command-pattern/</loc>
+    <lastmod>2026-10-16T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-14-iterator-pattern/</loc>
+    <lastmod>2026-10-15T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-13-observer-pattern/</loc>
+    <lastmod>2026-10-14T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-12-state-pattern/</loc>
+    <lastmod>2026-10-13T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-11-strategy-pattern/</loc>
+    <lastmod>2026-10-12T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-10-composite-pattern/</loc>
+    <lastmod>2026-10-11T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-9-proxy-pattern/</loc>
+    <lastmod>2026-10-10T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-8-facade-pattern/</loc>
+    <lastmod>2026-10-09T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-7-decorator-pattern/</loc>
+    <lastmod>2026-10-08T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-6-adapter-pattern/</loc>
+    <lastmod>2026-10-07T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-5-prototype-pattern/</loc>
+    <lastmod>2026-10-06T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-4-builder-pattern/</loc>
+    <lastmod>2026-10-05T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-3-factory-method-pattern/</loc>
+    <lastmod>2026-10-04T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-2-abstract-factory-pattern/</loc>
+    <lastmod>2026-10-03T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-part-1-singleton-pattern/</loc>
+    <lastmod>2026-10-02T11:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/posts/design-patterns-introduction/</loc>
+    <lastmod>2026-10-01T13:00:00-04:00</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url><url>
+    <loc>https://dustinwaldron.github.io/tags/blogging/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/frontend/</loc>
+    <loc>https://dustinwaldron.github.io/tags/frontend/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/github/</loc>
+    <loc>https://dustinwaldron.github.io/tags/github/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/projects/nextjs-pokedex/</loc>
+    <loc>https://dustinwaldron.github.io/projects/nextjs-pokedex/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/nodejs/</loc>
+    <loc>https://dustinwaldron.github.io/tags/nodejs/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/projects/</loc>
+    <loc>https://dustinwaldron.github.io/projects/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/react/</loc>
+    <loc>https://dustinwaldron.github.io/tags/react/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/tags/typescript/</loc>
+    <loc>https://dustinwaldron.github.io/tags/typescript/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/posts/why-i-started-a-tech-blog/</loc>
+    <loc>https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/</loc>
     <lastmod>2025-11-01T11:00:00-04:00</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/about/</loc>
+    <loc>https://dustinwaldron.github.io/about/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>https://dustinwaldron.github.io/categories/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url><url>
-    <loc>http://localhost:1313/search/</loc>
+    <loc>https://dustinwaldron.github.io/search/</loc>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html lang="en" dir="auto" data-theme="auto">
 
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
+<meta name="robots" content="index, follow">
 <title>Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects | Dustin Waldron</title>
 <meta name="keywords" content="architecture, engineering, java, best practices">
 <meta name="description" content="A practical Java-oriented look at the Abstract Factory pattern, including when it helps, how it differs from a simple factory, and how it keeps object creation flexible without creating a mess of conditionals.">
 <meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/posts/design-patterns-part-2-abstract-factory-pattern/">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-2-abstract-factory-pattern/">
 <link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon.ico">
-<link rel="apple-touch-icon" href="http://localhost:1313/favicon.ico">
-<link rel="mask-icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/design-patterns-part-2-abstract-factory-pattern/">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-2-abstract-factory-pattern/">
 <noscript>
     <style>
         #theme-toggle,
@@ -66,44 +66,110 @@
         document.querySelector("html").dataset.theme = 'light';
     }
 
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-2-abstract-factory-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects">
+  <meta property="og:description" content="A practical Java-oriented look at the Abstract Factory pattern, including when it helps, how it differs from a simple factory, and how it keeps object creation flexible without creating a mess of conditionals.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-03T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-03T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects">
+<meta name="twitter:description" content="A practical Java-oriented look at the Abstract Factory pattern, including when it helps, how it differs from a simple factory, and how it keeps object creation flexible without creating a mess of conditionals.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-2-abstract-factory-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects",
+  "name": "Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects",
+  "description": "A practical Java-oriented look at the Abstract Factory pattern, including when it helps, how it differs from a simple factory, and how it keeps object creation flexible without creating a mess of conditionals.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The Abstract Factory Pattern Solves a Specific Design Problem The Singleton pattern is about one instance. The Abstract Factory pattern is about families of related objects.\nThat difference matters.\nIf you are building software that must work across multiple implementations of a common domain, a simple factory may be enough. But when the system needs to create a set of related products together—such as a UI toolkit, a database access layer, or a messaging stack—the Abstract Factory pattern gives you a more coherent and extensible abstraction.\nThis pattern is one of the most useful creational patterns in enterprise Java design because it allows a system to depend on interfaces and families of implementations without becoming tightly coupled to exact classes.\nIt is also one of the easiest patterns to misuse. The common temptation is to introduce an abstract factory too early, before the domain has enough shape. That creates extra architecture without real payoff. A pattern is only valuable when it solves a real variation problem.\nWhy Families of Objects Matter Most complex systems depend on multiple related objects working together.\nThink about a UI framework:\na button a checkbox a text field a scroll bar These are not just random objects. They are a family of UI components that need to share a visual language and behavior.\nNow imagine the same application must support both a desktop theme and a mobile theme. The classes are different, but the interfaces are the same. You do not want client code to know which concrete implementation is being used. You want the client to ask for a factory and then consume the product family through stable interfaces.\nThat is exactly the problem the Abstract Factory pattern addresses.\nThe Gang of Four Intent The Gang of Four describes the Abstract Factory pattern as a way to provide an interface for creating families of related or dependent objects without specifying their concrete classes.\nThe idea is simple but powerful:\ndefine a product family define a factory interface for creating each product in that family create concrete factories for each implementation family let the client depend on the abstract factory and abstract products, not the concrete variants This keeps the system open for extension and closed for modification. When a new implementation family appears, you add a new concrete factory rather than rewriting every call site.\nAbstract Factory vs Factory Method These two patterns are related, but they solve different problems.\nFactory Method The Factory Method pattern usually gives you one point of variation: one object is created through a subclass or a method.\nExample: a DocumentParserFactory creates a parser for a document type.\nAbstract Factory The Abstract Factory pattern is broader. It creates a family of related objects together. Think of it as a higher-level factory, one layer above the individual product factories.\nExample: a UIFactory creates a Button, TextField, and Dialog that all belong to the same platform family.\nA simple rule:\nuse Factory Method when you vary one product use Abstract Factory when you vary a whole family of related products If you try to force an abstract factory into a small codebase, you may over-engineer the solution. But in a platform abstraction or cross-environment design, it becomes extremely valuable.\nA Java Example: UI Components Across Platforms Let us look at a typical cross-platform scenario.\nWe want to create desktop and mobile UI components that share a common interface but have different implementations.\nProduct interfaces public interface Button { void render(); } public interface TextField { void render(); } Concrete products for desktop public class DesktopButton implements Button { @Override public void render() { System.out.println(\"Rendering desktop button\"); } } public class DesktopTextField implements TextField { @Override public void render() { System.out.println(\"Rendering desktop text field\"); } } Concrete products for mobile public class MobileButton implements Button { @Override public void render() { System.out.println(\"Rendering mobile button\"); } } public class MobileTextField implements TextField { @Override public void render() { System.out.println(\"Rendering mobile text field\"); } } Abstract factory public interface UIFactory { Button createButton(); TextField createTextField(); } Concrete factories public class DesktopUIFactory implements UIFactory { @Override public Button createButton() { return new DesktopButton(); } @Override public TextField createTextField() { return new DesktopTextField(); } } public class MobileUIFactory implements UIFactory { @Override public Button createButton() { return new MobileButton(); } @Override public TextField createTextField() { return new MobileTextField(); } } Client code public class LoginForm { private final Button submitButton; private final TextField usernameField; public LoginForm(UIFactory factory) { this.submitButton = factory.createButton(); this.usernameField = factory.createTextField(); } public void render() { usernameField.render(); submitButton.render(); } } Usage public class Main { public static void main(String[] args) { UIFactory factory = new DesktopUIFactory(); LoginForm form = new LoginForm(factory); form.render(); } } This is exactly the benefit of the pattern: the client code asks for a family of related objects and does not care whether the actual implementation is desktop or mobile.\nA Real-World Example: Payment Providers Another strong example is a payment system that supports multiple providers.\nYou may need:\na PaymentGateway a RefundProcessor a RiskEvaluator These all belong to a provider family and need to work together as a coherent system.\nInterfaces public interface PaymentGateway { void authorize(String userId, double amount); } public interface RefundProcessor { void refund(String paymentId, double amount); } public interface RiskEvaluator { boolean isHighRisk(String userId); } Stripe implementation family public class StripeGateway implements PaymentGateway { @Override public void authorize(String userId, double amount) { System.out.println(\"Stripe authorized payment for user \" + userId); } } public class StripeRefundProcessor implements RefundProcessor { @Override public void refund(String paymentId, double amount) { System.out.println(\"Stripe refunded payment \" + paymentId); } } public class StripeRiskEvaluator implements RiskEvaluator { @Override public boolean isHighRisk(String userId) { return false; } } PayPal implementation family public class PayPalGateway implements PaymentGateway { @Override public void authorize(String userId, double amount) { System.out.println(\"PayPal authorized payment for user \" + userId); } } public class PayPalRefundProcessor implements RefundProcessor { @Override public void refund(String paymentId, double amount) { System.out.println(\"PayPal refunded payment \" + paymentId); } } public class PayPalRiskEvaluator implements RiskEvaluator { @Override public boolean isHighRisk(String userId) { return true; } } Factory interface public interface PaymentProviderFactory { PaymentGateway createPaymentGateway(); RefundProcessor createRefundProcessor(); RiskEvaluator createRiskEvaluator(); } Concrete factory public class StripeFactory implements PaymentProviderFactory { @Override public PaymentGateway createPaymentGateway() { return new StripeGateway(); } @Override public RefundProcessor createRefundProcessor() { return new StripeRefundProcessor(); } @Override public RiskEvaluator createRiskEvaluator() { return new StripeRiskEvaluator(); } } This pattern becomes valuable when different providers require different implementation details, but the business process expects a consistent contract.\nWhy the Pattern Is Valuable in Java Systems The Abstract Factory pattern is especially useful when you need to:\nsupport multiple implementations behind one consistent API vary an entire product family without changing client code isolate platform-specific concerns keep the system decoupled from concrete classes It is often used in layered applications where each environment or provider has its own concrete implementation while the rest of the service layer depends only on abstractions.\nIn Java enterprise code, this is common in:\nUI libraries persistence abstractions cloud provider adapters message broker implementations payment and fraud frameworks The pattern helps a system remain maintainable as the number of variants grows. A codebase that hardcodes if (provider == \"stripe\") all over the place is usually a smell. The Abstract Factory pattern gives a cleaner place to centralize that logic.\nThe Design Trade-Offs The Abstract Factory pattern is not free.\nIt adds abstraction. It introduces more types and more indirection. That means a team must justify the additional structure.\nThe downside is visible when the system is simple and the product family is not actually variant-rich. In a small application, an abstract factory can make the code feel heavier than the problem deserves.\nThis is where technical judgment matters.\nA good design does not add abstraction because it looks “clean.” It adds it because the product families are real and the flexibility is valuable.\nIf your code only has one implementation and no meaningful variation, an abstract factory is probably unnecessary. If you have multiple platform-specific or provider-specific implementations that must stay consistent, it becomes a strong design choice.\nHow It Relates to SOLID The Abstract Factory pattern aligns clearly with the SOLID principles, especially the Open/Closed Principle and the Dependency Inversion Principle.\nOpen/Closed Principle The client code depends on abstractions, not concrete classes. Adding a new factory or product family does not require rewriting the client logic. You add new implementations instead.\nDependency Inversion Principle The system depends on interfaces such as UIFactory, Button, and TextField, not direct classes like DesktopButton or StripeGateway.\nThis is the same reason the pattern is powerful: it keeps high-level logic independent from low-level decisions.\nSingle Responsibility Principle The factory is responsible for creating products in a coherent family. The client stays focused on business behavior and delegates creation to the factory.\nThis pattern is a concrete expression of those principles in a recurring design problem.\nA Common Anti-Pattern: Factory Explosion A lot of teams create abstract factories too early and then end up with a forest of abstract types, product interfaces, and implementation classes that never really change.\nThis is the trap.\nThe pattern is not a reward for complexity. It is a tool for complexity that is real, recurring, and worth managing.\nBefore introducing an abstract factory, ask:\nare there multiple related families? will these implementations vary over time? do the products need to stay consistent as a set? is the logic likely to accumulate conditional branching if we do not abstract it? If the answer is mostly no, then a simpler factory or direct dependency injection may be a better fit.\nDependency Injection and Abstract Factories Together In modern Java applications, the Abstract Factory pattern often pairs well with dependency injection.\nInstead of constructing a factory directly in the client, you can inject it:\npublic class CheckoutService { private final PaymentProviderFactory paymentProviderFactory; public CheckoutService(PaymentProviderFactory paymentProviderFactory) { this.paymentProviderFactory = paymentProviderFactory; } public void processPayment(String userId, double amount) { PaymentGateway gateway = paymentProviderFactory.createPaymentGateway(); gateway.authorize(userId, amount); } } This keeps the service logic clean and makes the provider selection explicit at the composition root.\nThis is a good example of how patterns and modern object-oriented design work together. The pattern still matters, but the wiring becomes more explicit and testable.\nFinal Thoughts The Abstract Factory pattern is a strong solution when a system must work with families of related objects and keep the client code independent from concrete implementation choices.\nIt is particularly effective when your codebase must support:\nmultiple platforms multiple providers distinct implementation families consistent object sets that belong together It becomes less valuable when the variation is shallow or the domain is too small to justify the added layers.\nThe best engineering decisions are not made by memorizing patterns. They are made by recognizing the shape of the problem.\nIf the system needs a coherent family of related objects, the Abstract Factory pattern is not just elegant—it is practical. If it does not, then simpler abstractions are likely the better choice.\nThat is the design discipline that separates thoughtful engineering from pattern-heavy complexity.\n",
+  "wordCount" : "1837",
+  "inLanguage": "en",
+  "datePublished": "2026-10-03T11:00:00-04:00",
+  "dateModified": "2026-10-03T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-2-abstract-factory-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
 </script>
 </head>
 <body id="top">
     <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
             <div class="logo-switches">
             </div>
         </div>
         <ul id="menu">
             <li>
-                <a href="http://localhost:1313/about/" title="About">
+                <a href="https://dustinwaldron.github.io/about/" title="About">
                     <span>About</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/posts/" title="Posts">
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
                     <span>Posts</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/projects/" title="Projects">
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
                     <span>Projects</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
                     <span>Search</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/categories/" title="Categories">
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
                     <span>Categories</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/tags/" title="Tags">
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
                     <span>Tags</span>
                 </a>
             </li>
@@ -494,17 +560,17 @@
 
   <footer class="post-footer">
     <ul class="post-tags">
-      <li><a href="http://localhost:1313/tags/architecture/">Architecture</a></li>
-      <li><a href="http://localhost:1313/tags/engineering/">Engineering</a></li>
-      <li><a href="http://localhost:1313/tags/java/">Java</a></li>
-      <li><a href="http://localhost:1313/tags/best-practices/">Best Practices</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
     </ul>
   </footer>
 </article>
     </main>
     
 <footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">Dustin Waldron</a></span> · 
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
 
     <span>
         Powered by

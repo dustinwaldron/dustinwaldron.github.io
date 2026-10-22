@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: Command Pattern - Turning Requests into First-Class Objects | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-focused guide to the Command pattern, including request encapsulation, undo support, queues, and production-oriented trade-offs.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-15-command-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-15-command-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-15-command-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Command Pattern - Turning Requests into First-Class Objects">
+  <meta property="og:description" content="A practical Java-focused guide to the Command pattern, including request encapsulation, undo support, queues, and production-oriented trade-offs.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-16T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-16T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Command Pattern - Turning Requests into First-Class Objects">
+<meta name="twitter:description" content="A practical Java-focused guide to the Command pattern, including request encapsulation, undo support, queues, and production-oriented trade-offs.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Command Pattern - Turning Requests into First-Class Objects",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-15-command-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Command Pattern - Turning Requests into First-Class Objects",
+  "name": "Design Patterns: Command Pattern - Turning Requests into First-Class Objects",
+  "description": "A practical Java-focused guide to the Command pattern, including request encapsulation, undo support, queues, and production-oriented trade-offs.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The Command Pattern Solves a Request Management Problem In many systems, actions are not just method calls. They are business requests with lifecycle needs:\nexecute now or later queue and retry audit who requested what support undo/redo replay during recovery When request logic is embedded directly in UI handlers, controllers, or services, these capabilities become difficult to add consistently.\nThe Command pattern solves this by encapsulating a request as an object. The request object carries execution behavior (and optionally undo behavior), allowing requests to be queued, logged, composed, retried, and replayed in a structured way.\nIn Java systems, this is one of the most practical behavioral patterns for workflow orchestration and operational control.\nThe Gang of Four Intent The Gang of Four defines Command as:\nEncapsulate a request as an object, thereby letting you parameterize clients with queues, requests, and operations.\nIn practical terms:\ndefine a command interface represent each action as a concrete command class invokers trigger command execution receivers hold business behavior implementation This separates “what to do” from “when/how it is invoked.”\nWhy Teams Use Command Without Command, systems often accumulate:\ncontroller methods packed with business action details duplicated retry/audit logic around each endpoint brittle switch-based dispatchers poor traceability for operational actions With Command:\nactions become explicit units dispatch and execution can evolve independently command metadata can be logged uniformly queues/schedulers can process commands consistently This is especially valuable in admin tooling, workflow engines, and task execution systems.\nJava Example: Basic Command Structure Command contract public interface Command { void execute(); } Receiver public class AccountService { public void freeze(String accountId) { System.out.println(\"Freezing account \" + accountId); } public void unfreeze(String accountId) { System.out.println(\"Unfreezing account \" + accountId); } } Concrete command public class FreezeAccountCommand implements Command { private final AccountService accountService; private final String accountId; public FreezeAccountCommand(AccountService accountService, String accountId) { this.accountService = accountService; this.accountId = accountId; } @Override public void execute() { accountService.freeze(accountId); } } Invoker public class CommandBus { public void dispatch(Command command) { command.execute(); } } Usage AccountService accountService = new AccountService(); Command command = new FreezeAccountCommand(accountService, \"acct-123\"); new CommandBus().dispatch(command); This decouples request creation from execution orchestration.\nJava Example: Command with Undo Undo support is one of the classic strengths of this pattern.\nUndoable command contract public interface UndoableCommand { void execute(); void undo(); } Concrete command public class FreezeAccountUndoableCommand implements UndoableCommand { private final AccountService accountService; private final String accountId; private boolean executed; public FreezeAccountUndoableCommand(AccountService accountService, String accountId) { this.accountService = accountService; this.accountId = accountId; } @Override public void execute() { accountService.freeze(accountId); executed = true; } @Override public void undo() { if (!executed) { throw new IllegalStateException(\"Cannot undo before execution\"); } accountService.unfreeze(accountId); } } Invoker with history import java.util.ArrayDeque; import java.util.Deque; public class UndoableCommandBus { private final Deque\u003cUndoableCommand\u003e history = new ArrayDeque\u003c\u003e(); public void dispatch(UndoableCommand command) { command.execute(); history.push(command); } public void undoLast() { UndoableCommand command = history.poll(); if (command == null) { throw new IllegalStateException(\"No command to undo\"); } command.undo(); } } This gives structured undo semantics without exposing receiver internals to callers.\nJava Example: Queued Command Processing Command objects are natural queue payloads.\nimport java.util.concurrent.BlockingQueue; import java.util.concurrent.LinkedBlockingQueue; public class QueuedCommandProcessor { private final BlockingQueue\u003cCommand\u003e queue = new LinkedBlockingQueue\u003c\u003e(); public void submit(Command command) { queue.add(command); } public void processNext() throws InterruptedException { Command command = queue.take(); command.execute(); } } This separates producer timing from execution timing, which is often essential in operational systems.\nCommand vs Strategy These patterns are related but different:\nStrategy encapsulates interchangeable algorithms. Command encapsulates invocable requests/actions. If your problem is “which algorithm should run,” think Strategy.\nIf your problem is “how to represent, queue, execute, track, or undo an action,” think Command.\nCommand vs Chain of Responsibility Command wraps one request as an object. Chain of Responsibility routes a request through multiple handlers until one handles it. They can be combined, but they solve different concerns.\nSOLID Alignment Command strongly supports SOLID principles:\nSingle Responsibility Principle Each command class owns one action.\nOpen/Closed Principle Add new actions by adding new command types, not by editing central dispatch conditionals.\nDependency Inversion Principle Invokers depend on command interfaces, not concrete business services.\nThis promotes modular action design and easier extension over time.\nCommon Mistakes 1. Putting too much logic in invokers Invokers should orchestrate execution, not absorb command business rules.\n2. Weak command identity and metadata In production systems, commands usually need IDs, timestamps, actor context, and correlation IDs for observability.\n3. Non-idempotent retries without safeguards Queued or retried commands must consider duplicate execution risks.\n4. Overusing command classes for trivial one-off calls If an action is simple and has no scheduling/audit/undo needs, a direct call may be cleaner.\nPractical Guidance for Java Teams Use Command when:\nactions need to be queued, audited, retried, or undone request handling must be decoupled from request invocation action catalogs are growing and need structured dispatch Avoid Command when:\ndirect method calls are sufficient and stable introducing command classes adds ceremony without operational value there is no realistic need for deferred execution, history, or replay Pattern discipline means matching abstraction to workflow and operational requirements.\nFinal Thoughts The Command pattern is valuable because modern systems often need to treat actions as durable, observable, and schedulable units, not just immediate method calls.\nIn Java, Command gives teams a clean way to model actions for queueing, undo, replay, and orchestration while keeping invokers decoupled from business receivers.\nUsed well, it improves extensibility and operational control. Used carelessly, it creates class sprawl without meaningful benefit.\nThe practical standard is clear:\nmodel meaningful actions as commands keep receiver logic cohesive keep invokers lean design for retries, idempotency, and observability where commands are durable That is how you turn request handling into a maintainable system capability instead of scattered control flow.\n",
+  "wordCount" : "953",
+  "inLanguage": "en",
+  "datePublished": "2026-10-16T11:00:00-04:00",
+  "dateModified": "2026-10-16T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-15-command-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Command Pattern - Turning Requests into First-Class Objects
+    </h1>
+    <div class="post-description">
+      A practical Java-focused guide to the Command pattern, including request encapsulation, undo support, queues, and production-oriented trade-offs.
+    </div>
+    <div class="post-meta"><span title='2026-10-16 11:00:00 -0400 EDT'>October 16, 2026</span>&nbsp;·&nbsp;<span>5 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-command-pattern-solves-a-request-management-problem">The Command Pattern Solves a Request Management Problem</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#why-teams-use-command">Why Teams Use Command</a></li>
+    <li><a href="#java-example-basic-command-structure">Java Example: Basic Command Structure</a>
+      <ul>
+        <li><a href="#command-contract">Command contract</a></li>
+        <li><a href="#receiver">Receiver</a></li>
+        <li><a href="#concrete-command">Concrete command</a></li>
+        <li><a href="#invoker">Invoker</a></li>
+        <li><a href="#usage">Usage</a></li>
+      </ul>
+    </li>
+    <li><a href="#java-example-command-with-undo">Java Example: Command with Undo</a>
+      <ul>
+        <li><a href="#undoable-command-contract">Undoable command contract</a></li>
+        <li><a href="#concrete-command-1">Concrete command</a></li>
+        <li><a href="#invoker-with-history">Invoker with history</a></li>
+      </ul>
+    </li>
+    <li><a href="#java-example-queued-command-processing">Java Example: Queued Command Processing</a></li>
+    <li><a href="#command-vs-strategy">Command vs Strategy</a></li>
+    <li><a href="#command-vs-chain-of-responsibility">Command vs Chain of Responsibility</a></li>
+    <li><a href="#solid-alignment">SOLID Alignment</a>
+      <ul>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#common-mistakes">Common Mistakes</a>
+      <ul>
+        <li><a href="#1-putting-too-much-logic-in-invokers">1. Putting too much logic in invokers</a></li>
+        <li><a href="#2-weak-command-identity-and-metadata">2. Weak command identity and metadata</a></li>
+        <li><a href="#3-non-idempotent-retries-without-safeguards">3. Non-idempotent retries without safeguards</a></li>
+        <li><a href="#4-overusing-command-classes-for-trivial-one-off-calls">4. Overusing command classes for trivial one-off calls</a></li>
+      </ul>
+    </li>
+    <li><a href="#practical-guidance-for-java-teams">Practical Guidance for Java Teams</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-command-pattern-solves-a-request-management-problem">The Command Pattern Solves a Request Management Problem<a hidden class="anchor" aria-hidden="true" href="#the-command-pattern-solves-a-request-management-problem">#</a></h2>
+<p>In many systems, actions are not just method calls. They are business requests with lifecycle needs:</p>
+<ul>
+<li>execute now or later</li>
+<li>queue and retry</li>
+<li>audit who requested what</li>
+<li>support undo/redo</li>
+<li>replay during recovery</li>
+</ul>
+<p>When request logic is embedded directly in UI handlers, controllers, or services, these capabilities become difficult to add consistently.</p>
+<p>The Command pattern solves this by encapsulating a request as an object. The request object carries execution behavior (and optionally undo behavior), allowing requests to be queued, logged, composed, retried, and replayed in a structured way.</p>
+<p>In Java systems, this is one of the most practical behavioral patterns for workflow orchestration and operational control.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four defines Command as:</p>
+<blockquote>
+<p>Encapsulate a request as an object, thereby letting you parameterize clients with queues, requests, and operations.</p>
+</blockquote>
+<p>In practical terms:</p>
+<ul>
+<li>define a command interface</li>
+<li>represent each action as a concrete command class</li>
+<li>invokers trigger command execution</li>
+<li>receivers hold business behavior implementation</li>
+</ul>
+<p>This separates “what to do” from “when/how it is invoked.”</p>
+<hr>
+<h2 id="why-teams-use-command">Why Teams Use Command<a hidden class="anchor" aria-hidden="true" href="#why-teams-use-command">#</a></h2>
+<p>Without Command, systems often accumulate:</p>
+<ul>
+<li>controller methods packed with business action details</li>
+<li>duplicated retry/audit logic around each endpoint</li>
+<li>brittle switch-based dispatchers</li>
+<li>poor traceability for operational actions</li>
+</ul>
+<p>With Command:</p>
+<ul>
+<li>actions become explicit units</li>
+<li>dispatch and execution can evolve independently</li>
+<li>command metadata can be logged uniformly</li>
+<li>queues/schedulers can process commands consistently</li>
+</ul>
+<p>This is especially valuable in admin tooling, workflow engines, and task execution systems.</p>
+<hr>
+<h2 id="java-example-basic-command-structure">Java Example: Basic Command Structure<a hidden class="anchor" aria-hidden="true" href="#java-example-basic-command-structure">#</a></h2>
+<h3 id="command-contract">Command contract<a hidden class="anchor" aria-hidden="true" href="#command-contract">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">Command</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">execute</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="receiver">Receiver<a hidden class="anchor" aria-hidden="true" href="#receiver">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AccountService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">freeze</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">accountId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Freezing account &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">accountId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">unfreeze</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">accountId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Unfreezing account &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">accountId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-command">Concrete command<a hidden class="anchor" aria-hidden="true" href="#concrete-command">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">FreezeAccountCommand</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">Command</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">AccountService</span><span class="w"> </span><span class="n">accountService</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">accountId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">FreezeAccountCommand</span><span class="p">(</span><span class="n">AccountService</span><span class="w"> </span><span class="n">accountService</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">accountId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">accountService</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">accountService</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">accountId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">accountId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">execute</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">accountService</span><span class="p">.</span><span class="na">freeze</span><span class="p">(</span><span class="n">accountId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="invoker">Invoker<a hidden class="anchor" aria-hidden="true" href="#invoker">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CommandBus</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">dispatch</span><span class="p">(</span><span class="n">Command</span><span class="w"> </span><span class="n">command</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">command</span><span class="p">.</span><span class="na">execute</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="usage">Usage<a hidden class="anchor" aria-hidden="true" href="#usage">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">AccountService</span><span class="w"> </span><span class="n">accountService</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AccountService</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">Command</span><span class="w"> </span><span class="n">command</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">FreezeAccountCommand</span><span class="p">(</span><span class="n">accountService</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;acct-123&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">new</span><span class="w"> </span><span class="n">CommandBus</span><span class="p">().</span><span class="na">dispatch</span><span class="p">(</span><span class="n">command</span><span class="p">);</span><span class="w">
+</span></span></span></code></pre></div><p>This decouples request creation from execution orchestration.</p>
+<hr>
+<h2 id="java-example-command-with-undo">Java Example: Command with Undo<a hidden class="anchor" aria-hidden="true" href="#java-example-command-with-undo">#</a></h2>
+<p>Undo support is one of the classic strengths of this pattern.</p>
+<h3 id="undoable-command-contract">Undoable command contract<a hidden class="anchor" aria-hidden="true" href="#undoable-command-contract">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">UndoableCommand</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">execute</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">undo</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-command-1">Concrete command<a hidden class="anchor" aria-hidden="true" href="#concrete-command-1">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">FreezeAccountUndoableCommand</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">UndoableCommand</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">AccountService</span><span class="w"> </span><span class="n">accountService</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">accountId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="n">executed</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">FreezeAccountUndoableCommand</span><span class="p">(</span><span class="n">AccountService</span><span class="w"> </span><span class="n">accountService</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">accountId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">accountService</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">accountService</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">accountId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">accountId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">execute</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">accountService</span><span class="p">.</span><span class="na">freeze</span><span class="p">(</span><span class="n">accountId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">executed</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">undo</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">executed</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Cannot undo before execution&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">accountService</span><span class="p">.</span><span class="na">unfreeze</span><span class="p">(</span><span class="n">accountId</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="invoker-with-history">Invoker with history<a hidden class="anchor" aria-hidden="true" href="#invoker-with-history">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.ArrayDeque</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Deque</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">UndoableCommandBus</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">Deque</span><span class="o">&lt;</span><span class="n">UndoableCommand</span><span class="o">&gt;</span><span class="w"> </span><span class="n">history</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayDeque</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">dispatch</span><span class="p">(</span><span class="n">UndoableCommand</span><span class="w"> </span><span class="n">command</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">command</span><span class="p">.</span><span class="na">execute</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">history</span><span class="p">.</span><span class="na">push</span><span class="p">(</span><span class="n">command</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">undoLast</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">UndoableCommand</span><span class="w"> </span><span class="n">command</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">history</span><span class="p">.</span><span class="na">poll</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">command</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;No command to undo&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">command</span><span class="p">.</span><span class="na">undo</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This gives structured undo semantics without exposing receiver internals to callers.</p>
+<hr>
+<h2 id="java-example-queued-command-processing">Java Example: Queued Command Processing<a hidden class="anchor" aria-hidden="true" href="#java-example-queued-command-processing">#</a></h2>
+<p>Command objects are natural queue payloads.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.concurrent.BlockingQueue</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.concurrent.LinkedBlockingQueue</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">QueuedCommandProcessor</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">BlockingQueue</span><span class="o">&lt;</span><span class="n">Command</span><span class="o">&gt;</span><span class="w"> </span><span class="n">queue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">LinkedBlockingQueue</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">submit</span><span class="p">(</span><span class="n">Command</span><span class="w"> </span><span class="n">command</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">queue</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">command</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">processNext</span><span class="p">()</span><span class="w"> </span><span class="kd">throws</span><span class="w"> </span><span class="n">InterruptedException</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">Command</span><span class="w"> </span><span class="n">command</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">queue</span><span class="p">.</span><span class="na">take</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">command</span><span class="p">.</span><span class="na">execute</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This separates producer timing from execution timing, which is often essential in operational systems.</p>
+<hr>
+<h2 id="command-vs-strategy">Command vs Strategy<a hidden class="anchor" aria-hidden="true" href="#command-vs-strategy">#</a></h2>
+<p>These patterns are related but different:</p>
+<ul>
+<li><strong>Strategy</strong> encapsulates interchangeable algorithms.</li>
+<li><strong>Command</strong> encapsulates invocable requests/actions.</li>
+</ul>
+<p>If your problem is “which algorithm should run,” think Strategy.<br>
+If your problem is “how to represent, queue, execute, track, or undo an action,” think Command.</p>
+<hr>
+<h2 id="command-vs-chain-of-responsibility">Command vs Chain of Responsibility<a hidden class="anchor" aria-hidden="true" href="#command-vs-chain-of-responsibility">#</a></h2>
+<ul>
+<li><strong>Command</strong> wraps one request as an object.</li>
+<li><strong>Chain of Responsibility</strong> routes a request through multiple handlers until one handles it.</li>
+</ul>
+<p>They can be combined, but they solve different concerns.</p>
+<hr>
+<h2 id="solid-alignment">SOLID Alignment<a hidden class="anchor" aria-hidden="true" href="#solid-alignment">#</a></h2>
+<p>Command strongly supports SOLID principles:</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>Each command class owns one action.</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>Add new actions by adding new command types, not by editing central dispatch conditionals.</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>Invokers depend on command interfaces, not concrete business services.</p>
+<p>This promotes modular action design and easier extension over time.</p>
+<hr>
+<h2 id="common-mistakes">Common Mistakes<a hidden class="anchor" aria-hidden="true" href="#common-mistakes">#</a></h2>
+<h3 id="1-putting-too-much-logic-in-invokers">1. Putting too much logic in invokers<a hidden class="anchor" aria-hidden="true" href="#1-putting-too-much-logic-in-invokers">#</a></h3>
+<p>Invokers should orchestrate execution, not absorb command business rules.</p>
+<h3 id="2-weak-command-identity-and-metadata">2. Weak command identity and metadata<a hidden class="anchor" aria-hidden="true" href="#2-weak-command-identity-and-metadata">#</a></h3>
+<p>In production systems, commands usually need IDs, timestamps, actor context, and correlation IDs for observability.</p>
+<h3 id="3-non-idempotent-retries-without-safeguards">3. Non-idempotent retries without safeguards<a hidden class="anchor" aria-hidden="true" href="#3-non-idempotent-retries-without-safeguards">#</a></h3>
+<p>Queued or retried commands must consider duplicate execution risks.</p>
+<h3 id="4-overusing-command-classes-for-trivial-one-off-calls">4. Overusing command classes for trivial one-off calls<a hidden class="anchor" aria-hidden="true" href="#4-overusing-command-classes-for-trivial-one-off-calls">#</a></h3>
+<p>If an action is simple and has no scheduling/audit/undo needs, a direct call may be cleaner.</p>
+<hr>
+<h2 id="practical-guidance-for-java-teams">Practical Guidance for Java Teams<a hidden class="anchor" aria-hidden="true" href="#practical-guidance-for-java-teams">#</a></h2>
+<p>Use Command when:</p>
+<ul>
+<li>actions need to be queued, audited, retried, or undone</li>
+<li>request handling must be decoupled from request invocation</li>
+<li>action catalogs are growing and need structured dispatch</li>
+</ul>
+<p>Avoid Command when:</p>
+<ul>
+<li>direct method calls are sufficient and stable</li>
+<li>introducing command classes adds ceremony without operational value</li>
+<li>there is no realistic need for deferred execution, history, or replay</li>
+</ul>
+<p>Pattern discipline means matching abstraction to workflow and operational requirements.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Command pattern is valuable because modern systems often need to treat actions as durable, observable, and schedulable units, not just immediate method calls.</p>
+<p>In Java, Command gives teams a clean way to model actions for queueing, undo, replay, and orchestration while keeping invokers decoupled from business receivers.</p>
+<p>Used well, it improves extensibility and operational control. Used carelessly, it creates class sprawl without meaningful benefit.</p>
+<p>The practical standard is clear:</p>
+<ul>
+<li>model meaningful actions as commands</li>
+<li>keep receiver logic cohesive</li>
+<li>keep invokers lean</li>
+<li>design for retries, idempotency, and observability where commands are durable</li>
+</ul>
+<p>That is how you turn request handling into a maintainable system capability instead of scattered control flow.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

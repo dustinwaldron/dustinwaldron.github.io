@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: Strategy Pattern - Replacing Conditionals with Interchangeable Behavior | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-focused guide to the Strategy pattern, including runtime behavior selection, testability benefits, and common implementation pitfalls.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-11-strategy-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-11-strategy-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-11-strategy-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Strategy Pattern - Replacing Conditionals with Interchangeable Behavior">
+  <meta property="og:description" content="A practical Java-focused guide to the Strategy pattern, including runtime behavior selection, testability benefits, and common implementation pitfalls.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-12T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-12T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Strategy Pattern - Replacing Conditionals with Interchangeable Behavior">
+<meta name="twitter:description" content="A practical Java-focused guide to the Strategy pattern, including runtime behavior selection, testability benefits, and common implementation pitfalls.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Strategy Pattern - Replacing Conditionals with Interchangeable Behavior",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-11-strategy-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Strategy Pattern - Replacing Conditionals with Interchangeable Behavior",
+  "name": "Design Patterns: Strategy Pattern - Replacing Conditionals with Interchangeable Behavior",
+  "description": "A practical Java-focused guide to the Strategy pattern, including runtime behavior selection, testability benefits, and common implementation pitfalls.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The Strategy Pattern Solves a Behavior Variation Problem Many systems start with one algorithm. Then product requirements split:\npricing rules vary by customer tier retry policy varies by endpoint sorting logic varies by context shipping logic varies by region and SLA The common anti-pattern is a growing if/else or switch chain embedded in one class.\nThat design works briefly, then becomes fragile. Every new variation requires editing existing logic, retesting broad paths, and managing side effects from unrelated branches.\nThe Strategy pattern solves this by encapsulating each algorithm in its own class behind a shared interface. The client chooses which strategy to use at runtime without changing the client’s core flow.\nIn Java systems, this is one of the most practical patterns for keeping behavior extensible and testable.\nThe Gang of Four Intent The Gang of Four defines Strategy as:\nDefine a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.\nPractically, this means:\ndefine a strategy interface implement concrete strategy classes inject or select strategy in context/client code avoid hardcoded conditional branching in the client This makes behavior extension additive instead of invasive.\nWhy Teams Use Strategy Without Strategy, algorithm changes tend to create:\nbranching-heavy service methods duplicated pre/post processing logic tight coupling between decision logic and execution logic difficult unit testing of individual behavior variants With Strategy, each algorithm becomes a composable unit.\nThat improves:\nreadability change isolation test focus long-term maintainability Java Example: Shipping Cost Calculation Strategy interface public interface ShippingStrategy { long calculateCents(Order order); } Concrete strategies public class StandardShippingStrategy implements ShippingStrategy { @Override public long calculateCents(Order order) { return 799L; } } public class ExpressShippingStrategy implements ShippingStrategy { @Override public long calculateCents(Order order) { return 1999L; } } public class FreeShippingOverThresholdStrategy implements ShippingStrategy { private final long thresholdCents; public FreeShippingOverThresholdStrategy(long thresholdCents) { this.thresholdCents = thresholdCents; } @Override public long calculateCents(Order order) { return order.subtotalCents() \u003e= thresholdCents ? 0L : 999L; } } Context public class CheckoutService { private final ShippingStrategy shippingStrategy; public CheckoutService(ShippingStrategy shippingStrategy) { this.shippingStrategy = shippingStrategy; } public long totalCents(Order order) { return order.subtotalCents() + shippingStrategy.calculateCents(order); } } public record Order(String id, long subtotalCents) {} Usage Order order = new Order(\"ord-123\", 12_500L); CheckoutService checkout = new CheckoutService(new FreeShippingOverThresholdStrategy(10_000L)); long total = checkout.totalCents(order); System.out.println(\"Total cents: \" + total); No branching in CheckoutService, and new shipping behavior can be added without modifying that class.\nAnother Java Example: Payment Retry Policy Retry behavior often varies by integration reliability profile.\nStrategy public interface RetryStrategy { boolean shouldRetry(int attemptNumber, int statusCode); } Concrete strategies public class AggressiveRetryStrategy implements RetryStrategy { @Override public boolean shouldRetry(int attemptNumber, int statusCode) { return attemptNumber \u003c 5 \u0026\u0026 statusCode \u003e= 500; } } public class ConservativeRetryStrategy implements RetryStrategy { @Override public boolean shouldRetry(int attemptNumber, int statusCode) { return attemptNumber \u003c 2 \u0026\u0026 statusCode == 503; } } Context public class PaymentClient { private final RetryStrategy retryStrategy; public PaymentClient(RetryStrategy retryStrategy) { this.retryStrategy = retryStrategy; } public void charge(String customerId, long amountCents) { int attempt = 0; int statusCode; do { attempt++; statusCode = simulateRemoteCall(customerId, amountCents, attempt); if (statusCode == 200) { return; } } while (retryStrategy.shouldRetry(attempt, statusCode)); throw new IllegalStateException(\"Charge failed with status \" + statusCode); } private int simulateRemoteCall(String customerId, long amountCents, int attempt) { return attempt \u003c 2 ? 503 : 200; } } The client workflow remains stable while retry policy changes independently.\nStrategy vs State These patterns look similar structurally but differ in intent:\nStrategy selects among interchangeable algorithms. State changes behavior based on internal state transitions over time. If behavior choice is configuration/policy-driven, Strategy is usually the fit.\nIf behavior evolves because object state transitions, State is often more appropriate.\nStrategy vs Template Method Strategy uses composition and interchangeable objects. Template Method uses inheritance and fixed algorithm skeletons with overridable steps. In Java enterprise systems, Strategy is often preferred when runtime flexibility and testability are priorities.\nSOLID Alignment Strategy is a direct expression of SOLID principles:\nOpen/Closed Principle New behaviors are added via new strategy classes, not by editing existing context logic.\nSingle Responsibility Principle Each strategy class owns one algorithmic concern.\nDependency Inversion Principle Context classes depend on abstractions (ShippingStrategy, RetryStrategy), not concrete algorithms.\nThis is why Strategy scales well as product logic evolves.\nCommon Mistakes 1. Too many trivial strategies Do not create class-per-line abstractions for minor differences that do not justify indirection.\n2. Leaking context internals into strategies Keep strategy inputs focused and stable. Passing entire service internals increases coupling.\n3. Strategy selection logic spread across the system Centralize selection at composition boundaries (configuration, factory, DI container) where possible.\n4. Ignoring defaults Define safe default behavior. Missing strategy configuration should fail clearly or use an intentional baseline.\nPractical Guidance for Java Teams Use Strategy when:\nalgorithm variants are real and expected to grow you need runtime behavior selection testability of each algorithm matters branch-heavy logic is growing in a core service Avoid Strategy when:\nthere is one stable algorithm with low change likelihood indirection adds more complexity than it removes a straightforward method parameter or comparator is enough Use the pattern to reduce complexity, not to decorate simple code.\nFinal Thoughts The Strategy pattern remains one of the most useful behavioral patterns because it turns algorithm variation from a maintenance risk into a composable design choice.\nIn Java, it helps teams replace brittle conditional logic with explicit, testable, and swappable behavior modules.\nUsed well, Strategy makes services easier to evolve and reason about. Used carelessly, it can create unnecessary class sprawl.\nThe practical standard is clear:\nextract meaningful algorithm families keep strategy contracts narrow centralize strategy selection test each strategy as production-critical logic That is how you keep behavior flexible without letting complexity spread through core workflows.\n",
+  "wordCount" : "953",
+  "inLanguage": "en",
+  "datePublished": "2026-10-12T11:00:00-04:00",
+  "dateModified": "2026-10-12T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-11-strategy-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Strategy Pattern - Replacing Conditionals with Interchangeable Behavior
+    </h1>
+    <div class="post-description">
+      A practical Java-focused guide to the Strategy pattern, including runtime behavior selection, testability benefits, and common implementation pitfalls.
+    </div>
+    <div class="post-meta"><span title='2026-10-12 11:00:00 -0400 EDT'>October 12, 2026</span>&nbsp;·&nbsp;<span>5 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-strategy-pattern-solves-a-behavior-variation-problem">The Strategy Pattern Solves a Behavior Variation Problem</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#why-teams-use-strategy">Why Teams Use Strategy</a></li>
+    <li><a href="#java-example-shipping-cost-calculation">Java Example: Shipping Cost Calculation</a>
+      <ul>
+        <li><a href="#strategy-interface">Strategy interface</a></li>
+        <li><a href="#concrete-strategies">Concrete strategies</a></li>
+        <li><a href="#context">Context</a></li>
+        <li><a href="#usage">Usage</a></li>
+      </ul>
+    </li>
+    <li><a href="#another-java-example-payment-retry-policy">Another Java Example: Payment Retry Policy</a>
+      <ul>
+        <li><a href="#strategy">Strategy</a></li>
+        <li><a href="#concrete-strategies-1">Concrete strategies</a></li>
+        <li><a href="#context-1">Context</a></li>
+      </ul>
+    </li>
+    <li><a href="#strategy-vs-state">Strategy vs State</a></li>
+    <li><a href="#strategy-vs-template-method">Strategy vs Template Method</a></li>
+    <li><a href="#solid-alignment">SOLID Alignment</a>
+      <ul>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#common-mistakes">Common Mistakes</a>
+      <ul>
+        <li><a href="#1-too-many-trivial-strategies">1. Too many trivial strategies</a></li>
+        <li><a href="#2-leaking-context-internals-into-strategies">2. Leaking context internals into strategies</a></li>
+        <li><a href="#3-strategy-selection-logic-spread-across-the-system">3. Strategy selection logic spread across the system</a></li>
+        <li><a href="#4-ignoring-defaults">4. Ignoring defaults</a></li>
+      </ul>
+    </li>
+    <li><a href="#practical-guidance-for-java-teams">Practical Guidance for Java Teams</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-strategy-pattern-solves-a-behavior-variation-problem">The Strategy Pattern Solves a Behavior Variation Problem<a hidden class="anchor" aria-hidden="true" href="#the-strategy-pattern-solves-a-behavior-variation-problem">#</a></h2>
+<p>Many systems start with one algorithm. Then product requirements split:</p>
+<ul>
+<li>pricing rules vary by customer tier</li>
+<li>retry policy varies by endpoint</li>
+<li>sorting logic varies by context</li>
+<li>shipping logic varies by region and SLA</li>
+</ul>
+<p>The common anti-pattern is a growing <code>if/else</code> or <code>switch</code> chain embedded in one class.</p>
+<p>That design works briefly, then becomes fragile. Every new variation requires editing existing logic, retesting broad paths, and managing side effects from unrelated branches.</p>
+<p>The Strategy pattern solves this by encapsulating each algorithm in its own class behind a shared interface. The client chooses which strategy to use at runtime without changing the client’s core flow.</p>
+<p>In Java systems, this is one of the most practical patterns for keeping behavior extensible and testable.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four defines Strategy as:</p>
+<blockquote>
+<p>Define a family of algorithms, encapsulate each one, and make them interchangeable. Strategy lets the algorithm vary independently from clients that use it.</p>
+</blockquote>
+<p>Practically, this means:</p>
+<ul>
+<li>define a strategy interface</li>
+<li>implement concrete strategy classes</li>
+<li>inject or select strategy in context/client code</li>
+<li>avoid hardcoded conditional branching in the client</li>
+</ul>
+<p>This makes behavior extension additive instead of invasive.</p>
+<hr>
+<h2 id="why-teams-use-strategy">Why Teams Use Strategy<a hidden class="anchor" aria-hidden="true" href="#why-teams-use-strategy">#</a></h2>
+<p>Without Strategy, algorithm changes tend to create:</p>
+<ul>
+<li>branching-heavy service methods</li>
+<li>duplicated pre/post processing logic</li>
+<li>tight coupling between decision logic and execution logic</li>
+<li>difficult unit testing of individual behavior variants</li>
+</ul>
+<p>With Strategy, each algorithm becomes a composable unit.</p>
+<p>That improves:</p>
+<ul>
+<li>readability</li>
+<li>change isolation</li>
+<li>test focus</li>
+<li>long-term maintainability</li>
+</ul>
+<hr>
+<h2 id="java-example-shipping-cost-calculation">Java Example: Shipping Cost Calculation<a hidden class="anchor" aria-hidden="true" href="#java-example-shipping-cost-calculation">#</a></h2>
+<h3 id="strategy-interface">Strategy interface<a hidden class="anchor" aria-hidden="true" href="#strategy-interface">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">ShippingStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">long</span><span class="w"> </span><span class="nf">calculateCents</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-strategies">Concrete strategies<a hidden class="anchor" aria-hidden="true" href="#concrete-strategies">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">StandardShippingStrategy</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ShippingStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">calculateCents</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">799L</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">ExpressShippingStrategy</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ShippingStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">calculateCents</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">1999L</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">FreeShippingOverThresholdStrategy</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ShippingStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">thresholdCents</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">FreeShippingOverThresholdStrategy</span><span class="p">(</span><span class="kt">long</span><span class="w"> </span><span class="n">thresholdCents</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">thresholdCents</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">thresholdCents</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">calculateCents</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">order</span><span class="p">.</span><span class="na">subtotalCents</span><span class="p">()</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">thresholdCents</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">0L</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">999L</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="context">Context<a hidden class="anchor" aria-hidden="true" href="#context">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CheckoutService</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">ShippingStrategy</span><span class="w"> </span><span class="n">shippingStrategy</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">CheckoutService</span><span class="p">(</span><span class="n">ShippingStrategy</span><span class="w"> </span><span class="n">shippingStrategy</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">shippingStrategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">shippingStrategy</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="nf">totalCents</span><span class="p">(</span><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">order</span><span class="p">.</span><span class="na">subtotalCents</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">shippingStrategy</span><span class="p">.</span><span class="na">calculateCents</span><span class="p">(</span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">record</span> <span class="nc">Order</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">subtotalCents</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="usage">Usage<a hidden class="anchor" aria-hidden="true" href="#usage">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">Order</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Order</span><span class="p">(</span><span class="s">&#34;ord-123&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">12_500L</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">CheckoutService</span><span class="w"> </span><span class="n">checkout</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CheckoutService</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">FreeShippingOverThresholdStrategy</span><span class="p">(</span><span class="n">10_000L</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kt">long</span><span class="w"> </span><span class="n">total</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">checkout</span><span class="p">.</span><span class="na">totalCents</span><span class="p">(</span><span class="n">order</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="s">&#34;Total cents: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">total</span><span class="p">);</span><span class="w">
+</span></span></span></code></pre></div><p>No branching in <code>CheckoutService</code>, and new shipping behavior can be added without modifying that class.</p>
+<hr>
+<h2 id="another-java-example-payment-retry-policy">Another Java Example: Payment Retry Policy<a hidden class="anchor" aria-hidden="true" href="#another-java-example-payment-retry-policy">#</a></h2>
+<p>Retry behavior often varies by integration reliability profile.</p>
+<h3 id="strategy">Strategy<a hidden class="anchor" aria-hidden="true" href="#strategy">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">RetryStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">shouldRetry</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">attemptNumber</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">statusCode</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-strategies-1">Concrete strategies<a hidden class="anchor" aria-hidden="true" href="#concrete-strategies-1">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AggressiveRetryStrategy</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">RetryStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">shouldRetry</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">attemptNumber</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">statusCode</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">attemptNumber</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">5</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">statusCode</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">500</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">ConservativeRetryStrategy</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">RetryStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">shouldRetry</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">attemptNumber</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">statusCode</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">attemptNumber</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">2</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">statusCode</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">503</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="context-1">Context<a hidden class="anchor" aria-hidden="true" href="#context-1">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PaymentClient</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">RetryStrategy</span><span class="w"> </span><span class="n">retryStrategy</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">PaymentClient</span><span class="p">(</span><span class="n">RetryStrategy</span><span class="w"> </span><span class="n">retryStrategy</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">retryStrategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">retryStrategy</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">charge</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">customerId</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">amountCents</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">attempt</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">0</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kt">int</span><span class="w"> </span><span class="n">statusCode</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">do</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">attempt</span><span class="o">++</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">statusCode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">simulateRemoteCall</span><span class="p">(</span><span class="n">customerId</span><span class="p">,</span><span class="w"> </span><span class="n">amountCents</span><span class="p">,</span><span class="w"> </span><span class="n">attempt</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">statusCode</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="n">200</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">                </span><span class="k">return</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">while</span><span class="w"> </span><span class="p">(</span><span class="n">retryStrategy</span><span class="p">.</span><span class="na">shouldRetry</span><span class="p">(</span><span class="n">attempt</span><span class="p">,</span><span class="w"> </span><span class="n">statusCode</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Charge failed with status &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">statusCode</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="nf">simulateRemoteCall</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">customerId</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">amountCents</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">attempt</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">attempt</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">2</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="n">503</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">200</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>The client workflow remains stable while retry policy changes independently.</p>
+<hr>
+<h2 id="strategy-vs-state">Strategy vs State<a hidden class="anchor" aria-hidden="true" href="#strategy-vs-state">#</a></h2>
+<p>These patterns look similar structurally but differ in intent:</p>
+<ul>
+<li><strong>Strategy</strong> selects among interchangeable algorithms.</li>
+<li><strong>State</strong> changes behavior based on internal state transitions over time.</li>
+</ul>
+<p>If behavior choice is configuration/policy-driven, Strategy is usually the fit.<br>
+If behavior evolves because object state transitions, State is often more appropriate.</p>
+<hr>
+<h2 id="strategy-vs-template-method">Strategy vs Template Method<a hidden class="anchor" aria-hidden="true" href="#strategy-vs-template-method">#</a></h2>
+<ul>
+<li><strong>Strategy</strong> uses composition and interchangeable objects.</li>
+<li><strong>Template Method</strong> uses inheritance and fixed algorithm skeletons with overridable steps.</li>
+</ul>
+<p>In Java enterprise systems, Strategy is often preferred when runtime flexibility and testability are priorities.</p>
+<hr>
+<h2 id="solid-alignment">SOLID Alignment<a hidden class="anchor" aria-hidden="true" href="#solid-alignment">#</a></h2>
+<p>Strategy is a direct expression of SOLID principles:</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>New behaviors are added via new strategy classes, not by editing existing context logic.</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>Each strategy class owns one algorithmic concern.</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>Context classes depend on abstractions (<code>ShippingStrategy</code>, <code>RetryStrategy</code>), not concrete algorithms.</p>
+<p>This is why Strategy scales well as product logic evolves.</p>
+<hr>
+<h2 id="common-mistakes">Common Mistakes<a hidden class="anchor" aria-hidden="true" href="#common-mistakes">#</a></h2>
+<h3 id="1-too-many-trivial-strategies">1. Too many trivial strategies<a hidden class="anchor" aria-hidden="true" href="#1-too-many-trivial-strategies">#</a></h3>
+<p>Do not create class-per-line abstractions for minor differences that do not justify indirection.</p>
+<h3 id="2-leaking-context-internals-into-strategies">2. Leaking context internals into strategies<a hidden class="anchor" aria-hidden="true" href="#2-leaking-context-internals-into-strategies">#</a></h3>
+<p>Keep strategy inputs focused and stable. Passing entire service internals increases coupling.</p>
+<h3 id="3-strategy-selection-logic-spread-across-the-system">3. Strategy selection logic spread across the system<a hidden class="anchor" aria-hidden="true" href="#3-strategy-selection-logic-spread-across-the-system">#</a></h3>
+<p>Centralize selection at composition boundaries (configuration, factory, DI container) where possible.</p>
+<h3 id="4-ignoring-defaults">4. Ignoring defaults<a hidden class="anchor" aria-hidden="true" href="#4-ignoring-defaults">#</a></h3>
+<p>Define safe default behavior. Missing strategy configuration should fail clearly or use an intentional baseline.</p>
+<hr>
+<h2 id="practical-guidance-for-java-teams">Practical Guidance for Java Teams<a hidden class="anchor" aria-hidden="true" href="#practical-guidance-for-java-teams">#</a></h2>
+<p>Use Strategy when:</p>
+<ul>
+<li>algorithm variants are real and expected to grow</li>
+<li>you need runtime behavior selection</li>
+<li>testability of each algorithm matters</li>
+<li>branch-heavy logic is growing in a core service</li>
+</ul>
+<p>Avoid Strategy when:</p>
+<ul>
+<li>there is one stable algorithm with low change likelihood</li>
+<li>indirection adds more complexity than it removes</li>
+<li>a straightforward method parameter or comparator is enough</li>
+</ul>
+<p>Use the pattern to reduce complexity, not to decorate simple code.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Strategy pattern remains one of the most useful behavioral patterns because it turns algorithm variation from a maintenance risk into a composable design choice.</p>
+<p>In Java, it helps teams replace brittle conditional logic with explicit, testable, and swappable behavior modules.</p>
+<p>Used well, Strategy makes services easier to evolve and reason about. Used carelessly, it can create unnecessary class sprawl.</p>
+<p>The practical standard is clear:</p>
+<ul>
+<li>extract meaningful algorithm families</li>
+<li>keep strategy contracts narrow</li>
+<li>centralize strategy selection</li>
+<li>test each strategy as production-critical logic</li>
+</ul>
+<p>That is how you keep behavior flexible without letting complexity spread through core workflows.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

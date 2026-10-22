@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: State Pattern - Modeling Behavior Through Explicit State Transitions | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-focused guide to the State pattern, including transition modeling, cleaner workflow logic, and common pitfalls in production systems.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-12-state-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-12-state-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-12-state-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: State Pattern - Modeling Behavior Through Explicit State Transitions">
+  <meta property="og:description" content="A practical Java-focused guide to the State pattern, including transition modeling, cleaner workflow logic, and common pitfalls in production systems.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-13T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-13T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: State Pattern - Modeling Behavior Through Explicit State Transitions">
+<meta name="twitter:description" content="A practical Java-focused guide to the State pattern, including transition modeling, cleaner workflow logic, and common pitfalls in production systems.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: State Pattern - Modeling Behavior Through Explicit State Transitions",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-12-state-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: State Pattern - Modeling Behavior Through Explicit State Transitions",
+  "name": "Design Patterns: State Pattern - Modeling Behavior Through Explicit State Transitions",
+  "description": "A practical Java-focused guide to the State pattern, including transition modeling, cleaner workflow logic, and common pitfalls in production systems.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The State Pattern Solves a Workflow Complexity Problem Many systems have entities whose behavior depends on lifecycle stage:\norders move from created to paid to shipped accounts move from active to suspended to closed documents move from draft to approved to archived jobs move from queued to running to completed/failed The common failure mode is to keep lifecycle logic in one class with large conditional branches:\nif (status == CREATED) { ... } else if (status == PAID) { ... } else if (status == SHIPPED) { ... } As transitions and rules grow, that central class becomes fragile and hard to reason about.\nThe State pattern solves this by representing each state as an object and delegating behavior to the current state. State transitions become explicit, and behavior changes with state without giant conditionals.\nIn Java systems, this is one of the cleanest ways to model lifecycle-driven behavior.\nThe Gang of Four Intent The Gang of Four defines State as:\nAllow an object to alter its behavior when its internal state changes. The object will appear to change its class.\nIn practical terms:\ndefine a state interface for state-dependent behavior implement concrete states with transition rules keep a context object that holds current state delegate behavior calls from context to current state This keeps transition behavior localized and easier to evolve.\nWhy Teams Use State Without State, lifecycle logic often becomes:\none large method with nested branching duplicated transition checks across services inconsistent rule enforcement between call paths difficult unit tests for edge transitions With State:\neach state owns behavior for that stage legal transitions are explicit invalid transitions fail clearly tests can target state-by-state rules directly This is especially useful in transactional workflows and domain-rich services.\nJava Example: Order Lifecycle State interface public interface OrderState { void pay(OrderContext context); void ship(OrderContext context); void cancel(OrderContext context); String name(); } Context public class OrderContext { private OrderState state; private final String orderId; public OrderContext(String orderId) { this.orderId = orderId; this.state = new CreatedState(); } public String orderId() { return orderId; } public String currentState() { return state.name(); } void transitionTo(OrderState newState) { this.state = newState; } public void pay() { state.pay(this); } public void ship() { state.ship(this); } public void cancel() { state.cancel(this); } } Concrete states public class CreatedState implements OrderState { @Override public void pay(OrderContext context) { context.transitionTo(new PaidState()); } @Override public void ship(OrderContext context) { throw new IllegalStateException(\"Cannot ship an order that has not been paid\"); } @Override public void cancel(OrderContext context) { context.transitionTo(new CancelledState()); } @Override public String name() { return \"CREATED\"; } } public class PaidState implements OrderState { @Override public void pay(OrderContext context) { throw new IllegalStateException(\"Order is already paid\"); } @Override public void ship(OrderContext context) { context.transitionTo(new ShippedState()); } @Override public void cancel(OrderContext context) { context.transitionTo(new CancelledState()); } @Override public String name() { return \"PAID\"; } } public class ShippedState implements OrderState { @Override public void pay(OrderContext context) { throw new IllegalStateException(\"Cannot pay a shipped order\"); } @Override public void ship(OrderContext context) { throw new IllegalStateException(\"Order is already shipped\"); } @Override public void cancel(OrderContext context) { throw new IllegalStateException(\"Cannot cancel a shipped order\"); } @Override public String name() { return \"SHIPPED\"; } } public class CancelledState implements OrderState { @Override public void pay(OrderContext context) { throw new IllegalStateException(\"Cannot pay a cancelled order\"); } @Override public void ship(OrderContext context) { throw new IllegalStateException(\"Cannot ship a cancelled order\"); } @Override public void cancel(OrderContext context) { throw new IllegalStateException(\"Order is already cancelled\"); } @Override public String name() { return \"CANCELLED\"; } } Usage OrderContext order = new OrderContext(\"ord-1001\"); System.out.println(order.currentState()); // CREATED order.pay(); System.out.println(order.currentState()); // PAID order.ship(); System.out.println(order.currentState()); // SHIPPED This gives explicit transition behavior without central branching logic.\nAnother Java Example: Document Publishing State also helps with approval workflows:\nDraftState InReviewState PublishedState ArchivedState Each state can enforce allowed actions:\nonly draft can submit for review only reviewed can publish only published can archive This avoids policy drift across controllers/services because transition rules live in one model.\nState vs Strategy These patterns look similar structurally but differ in intent:\nStrategy selects an interchangeable algorithm. State changes behavior as lifecycle state transitions over time. If behavior choice is based on configuration or policy, Strategy is often right.\nIf behavior evolves as an entity progresses through a lifecycle, State is usually right.\nState vs Finite State Machine Libraries For small to moderate workflows, classic State objects are often enough.\nFor highly complex workflows with dozens of transitions, guard conditions, and side effects, a dedicated state machine library may be a better operational fit.\nThe pattern still applies conceptually; libraries simply formalize and instrument it.\nSOLID Alignment State naturally supports SOLID principles:\nSingle Responsibility Principle Each state class owns behavior and transition rules for one lifecycle stage.\nOpen/Closed Principle You can add new states or transition rules with minimal impact to existing states.\nDependency Inversion Principle Context depends on the OrderState abstraction, not concrete state internals.\nThis leads to cleaner lifecycle modeling and safer changes over time.\nCommon Mistakes 1. Transition logic split between context and states Keep transition rules in one place (usually state classes) to avoid contradictory behavior.\n2. Silent invalid transitions Invalid transitions should fail explicitly with useful error messages.\n3. Too much shared mutable data in states State objects should generally be stateless policy carriers; keep mutable entity data in context/domain model.\n4. Excessive object churn without need For high-throughput paths, consider reusing immutable singleton state instances instead of allocating new ones each transition.\nPractical Guidance for Java Teams Use State when:\nlifecycle stages are real and behavior differs by stage transition rules are becoming complex branch-heavy status logic is spread across services Avoid State when:\nthere are only one or two states with trivial behavior differences simple enums and straightforward checks are clearer lifecycle behavior is unlikely to evolve Pattern discipline means matching abstraction level to real workflow complexity.\nFinal Thoughts The State pattern is one of the most useful behavioral patterns for systems where correctness depends on lifecycle rules.\nIn Java, it replaces brittle status conditionals with explicit state-specific behavior and transition boundaries.\nUsed well, State improves clarity, testability, and evolution of workflow-rich domains. Used carelessly, it can create unnecessary class proliferation for simple scenarios.\nThe practical standard is clear:\nmodel meaningful states explicitly enforce transitions in one place fail invalid transitions loudly test each state’s legal and illegal actions That is how you keep lifecycle logic understandable as systems scale.\n",
+  "wordCount" : "1067",
+  "inLanguage": "en",
+  "datePublished": "2026-10-13T11:00:00-04:00",
+  "dateModified": "2026-10-13T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-12-state-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: State Pattern - Modeling Behavior Through Explicit State Transitions
+    </h1>
+    <div class="post-description">
+      A practical Java-focused guide to the State pattern, including transition modeling, cleaner workflow logic, and common pitfalls in production systems.
+    </div>
+    <div class="post-meta"><span title='2026-10-13 11:00:00 -0400 EDT'>October 13, 2026</span>&nbsp;·&nbsp;<span>6 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-state-pattern-solves-a-workflow-complexity-problem">The State Pattern Solves a Workflow Complexity Problem</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#why-teams-use-state">Why Teams Use State</a></li>
+    <li><a href="#java-example-order-lifecycle">Java Example: Order Lifecycle</a>
+      <ul>
+        <li><a href="#state-interface">State interface</a></li>
+        <li><a href="#context">Context</a></li>
+        <li><a href="#concrete-states">Concrete states</a></li>
+        <li><a href="#usage">Usage</a></li>
+      </ul>
+    </li>
+    <li><a href="#another-java-example-document-publishing">Another Java Example: Document Publishing</a></li>
+    <li><a href="#state-vs-strategy">State vs Strategy</a></li>
+    <li><a href="#state-vs-finite-state-machine-libraries">State vs Finite State Machine Libraries</a></li>
+    <li><a href="#solid-alignment">SOLID Alignment</a>
+      <ul>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#common-mistakes">Common Mistakes</a>
+      <ul>
+        <li><a href="#1-transition-logic-split-between-context-and-states">1. Transition logic split between context and states</a></li>
+        <li><a href="#2-silent-invalid-transitions">2. Silent invalid transitions</a></li>
+        <li><a href="#3-too-much-shared-mutable-data-in-states">3. Too much shared mutable data in states</a></li>
+        <li><a href="#4-excessive-object-churn-without-need">4. Excessive object churn without need</a></li>
+      </ul>
+    </li>
+    <li><a href="#practical-guidance-for-java-teams">Practical Guidance for Java Teams</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-state-pattern-solves-a-workflow-complexity-problem">The State Pattern Solves a Workflow Complexity Problem<a hidden class="anchor" aria-hidden="true" href="#the-state-pattern-solves-a-workflow-complexity-problem">#</a></h2>
+<p>Many systems have entities whose behavior depends on lifecycle stage:</p>
+<ul>
+<li>orders move from created to paid to shipped</li>
+<li>accounts move from active to suspended to closed</li>
+<li>documents move from draft to approved to archived</li>
+<li>jobs move from queued to running to completed/failed</li>
+</ul>
+<p>The common failure mode is to keep lifecycle logic in one class with large conditional branches:</p>
+<ul>
+<li><code>if (status == CREATED) { ... }</code></li>
+<li><code>else if (status == PAID) { ... }</code></li>
+<li><code>else if (status == SHIPPED) { ... }</code></li>
+</ul>
+<p>As transitions and rules grow, that central class becomes fragile and hard to reason about.</p>
+<p>The State pattern solves this by representing each state as an object and delegating behavior to the current state. State transitions become explicit, and behavior changes with state without giant conditionals.</p>
+<p>In Java systems, this is one of the cleanest ways to model lifecycle-driven behavior.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four defines State as:</p>
+<blockquote>
+<p>Allow an object to alter its behavior when its internal state changes. The object will appear to change its class.</p>
+</blockquote>
+<p>In practical terms:</p>
+<ul>
+<li>define a state interface for state-dependent behavior</li>
+<li>implement concrete states with transition rules</li>
+<li>keep a context object that holds current state</li>
+<li>delegate behavior calls from context to current state</li>
+</ul>
+<p>This keeps transition behavior localized and easier to evolve.</p>
+<hr>
+<h2 id="why-teams-use-state">Why Teams Use State<a hidden class="anchor" aria-hidden="true" href="#why-teams-use-state">#</a></h2>
+<p>Without State, lifecycle logic often becomes:</p>
+<ul>
+<li>one large method with nested branching</li>
+<li>duplicated transition checks across services</li>
+<li>inconsistent rule enforcement between call paths</li>
+<li>difficult unit tests for edge transitions</li>
+</ul>
+<p>With State:</p>
+<ul>
+<li>each state owns behavior for that stage</li>
+<li>legal transitions are explicit</li>
+<li>invalid transitions fail clearly</li>
+<li>tests can target state-by-state rules directly</li>
+</ul>
+<p>This is especially useful in transactional workflows and domain-rich services.</p>
+<hr>
+<h2 id="java-example-order-lifecycle">Java Example: Order Lifecycle<a hidden class="anchor" aria-hidden="true" href="#java-example-order-lifecycle">#</a></h2>
+<h3 id="state-interface">State interface<a hidden class="anchor" aria-hidden="true" href="#state-interface">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">OrderState</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">pay</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">ship</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">String</span><span class="w"> </span><span class="nf">name</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="context">Context<a hidden class="anchor" aria-hidden="true" href="#context">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">OrderContext</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">OrderState</span><span class="w"> </span><span class="n">state</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">orderId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">OrderContext</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">orderId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">orderId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">orderId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">CreatedState</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">orderId</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">orderId</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">currentState</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">state</span><span class="p">.</span><span class="na">name</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="nf">transitionTo</span><span class="p">(</span><span class="n">OrderState</span><span class="w"> </span><span class="n">newState</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">newState</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">pay</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">state</span><span class="p">.</span><span class="na">pay</span><span class="p">(</span><span class="k">this</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">ship</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">state</span><span class="p">.</span><span class="na">ship</span><span class="p">(</span><span class="k">this</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">cancel</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">state</span><span class="p">.</span><span class="na">cancel</span><span class="p">(</span><span class="k">this</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-states">Concrete states<a hidden class="anchor" aria-hidden="true" href="#concrete-states">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CreatedState</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">OrderState</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">pay</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">context</span><span class="p">.</span><span class="na">transitionTo</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">PaidState</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">ship</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Cannot ship an order that has not been paid&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">context</span><span class="p">.</span><span class="na">transitionTo</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">CancelledState</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">name</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;CREATED&#34;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PaidState</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">OrderState</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">pay</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Order is already paid&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">ship</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">context</span><span class="p">.</span><span class="na">transitionTo</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">ShippedState</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">context</span><span class="p">.</span><span class="na">transitionTo</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">CancelledState</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">name</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;PAID&#34;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">ShippedState</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">OrderState</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">pay</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Cannot pay a shipped order&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">ship</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Order is already shipped&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Cannot cancel a shipped order&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">name</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;SHIPPED&#34;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CancelledState</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">OrderState</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">pay</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Cannot pay a cancelled order&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">ship</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Cannot ship a cancelled order&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">cancel</span><span class="p">(</span><span class="n">OrderContext</span><span class="w"> </span><span class="n">context</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Order is already cancelled&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">name</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">&#34;CANCELLED&#34;</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="usage">Usage<a hidden class="anchor" aria-hidden="true" href="#usage">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">OrderContext</span><span class="w"> </span><span class="n">order</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">OrderContext</span><span class="p">(</span><span class="s">&#34;ord-1001&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">order</span><span class="p">.</span><span class="na">currentState</span><span class="p">());</span><span class="w"> </span><span class="c1">// CREATED</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">order</span><span class="p">.</span><span class="na">pay</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">order</span><span class="p">.</span><span class="na">currentState</span><span class="p">());</span><span class="w"> </span><span class="c1">// PAID</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">order</span><span class="p">.</span><span class="na">ship</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">order</span><span class="p">.</span><span class="na">currentState</span><span class="p">());</span><span class="w"> </span><span class="c1">// SHIPPED</span><span class="w">
+</span></span></span></code></pre></div><p>This gives explicit transition behavior without central branching logic.</p>
+<hr>
+<h2 id="another-java-example-document-publishing">Another Java Example: Document Publishing<a hidden class="anchor" aria-hidden="true" href="#another-java-example-document-publishing">#</a></h2>
+<p>State also helps with approval workflows:</p>
+<ul>
+<li><code>DraftState</code></li>
+<li><code>InReviewState</code></li>
+<li><code>PublishedState</code></li>
+<li><code>ArchivedState</code></li>
+</ul>
+<p>Each state can enforce allowed actions:</p>
+<ul>
+<li>only draft can submit for review</li>
+<li>only reviewed can publish</li>
+<li>only published can archive</li>
+</ul>
+<p>This avoids policy drift across controllers/services because transition rules live in one model.</p>
+<hr>
+<h2 id="state-vs-strategy">State vs Strategy<a hidden class="anchor" aria-hidden="true" href="#state-vs-strategy">#</a></h2>
+<p>These patterns look similar structurally but differ in intent:</p>
+<ul>
+<li><strong>Strategy</strong> selects an interchangeable algorithm.</li>
+<li><strong>State</strong> changes behavior as lifecycle state transitions over time.</li>
+</ul>
+<p>If behavior choice is based on configuration or policy, Strategy is often right.<br>
+If behavior evolves as an entity progresses through a lifecycle, State is usually right.</p>
+<hr>
+<h2 id="state-vs-finite-state-machine-libraries">State vs Finite State Machine Libraries<a hidden class="anchor" aria-hidden="true" href="#state-vs-finite-state-machine-libraries">#</a></h2>
+<p>For small to moderate workflows, classic State objects are often enough.<br>
+For highly complex workflows with dozens of transitions, guard conditions, and side effects, a dedicated state machine library may be a better operational fit.</p>
+<p>The pattern still applies conceptually; libraries simply formalize and instrument it.</p>
+<hr>
+<h2 id="solid-alignment">SOLID Alignment<a hidden class="anchor" aria-hidden="true" href="#solid-alignment">#</a></h2>
+<p>State naturally supports SOLID principles:</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>Each state class owns behavior and transition rules for one lifecycle stage.</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>You can add new states or transition rules with minimal impact to existing states.</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>Context depends on the <code>OrderState</code> abstraction, not concrete state internals.</p>
+<p>This leads to cleaner lifecycle modeling and safer changes over time.</p>
+<hr>
+<h2 id="common-mistakes">Common Mistakes<a hidden class="anchor" aria-hidden="true" href="#common-mistakes">#</a></h2>
+<h3 id="1-transition-logic-split-between-context-and-states">1. Transition logic split between context and states<a hidden class="anchor" aria-hidden="true" href="#1-transition-logic-split-between-context-and-states">#</a></h3>
+<p>Keep transition rules in one place (usually state classes) to avoid contradictory behavior.</p>
+<h3 id="2-silent-invalid-transitions">2. Silent invalid transitions<a hidden class="anchor" aria-hidden="true" href="#2-silent-invalid-transitions">#</a></h3>
+<p>Invalid transitions should fail explicitly with useful error messages.</p>
+<h3 id="3-too-much-shared-mutable-data-in-states">3. Too much shared mutable data in states<a hidden class="anchor" aria-hidden="true" href="#3-too-much-shared-mutable-data-in-states">#</a></h3>
+<p>State objects should generally be stateless policy carriers; keep mutable entity data in context/domain model.</p>
+<h3 id="4-excessive-object-churn-without-need">4. Excessive object churn without need<a hidden class="anchor" aria-hidden="true" href="#4-excessive-object-churn-without-need">#</a></h3>
+<p>For high-throughput paths, consider reusing immutable singleton state instances instead of allocating new ones each transition.</p>
+<hr>
+<h2 id="practical-guidance-for-java-teams">Practical Guidance for Java Teams<a hidden class="anchor" aria-hidden="true" href="#practical-guidance-for-java-teams">#</a></h2>
+<p>Use State when:</p>
+<ul>
+<li>lifecycle stages are real and behavior differs by stage</li>
+<li>transition rules are becoming complex</li>
+<li>branch-heavy status logic is spread across services</li>
+</ul>
+<p>Avoid State when:</p>
+<ul>
+<li>there are only one or two states with trivial behavior differences</li>
+<li>simple enums and straightforward checks are clearer</li>
+<li>lifecycle behavior is unlikely to evolve</li>
+</ul>
+<p>Pattern discipline means matching abstraction level to real workflow complexity.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The State pattern is one of the most useful behavioral patterns for systems where correctness depends on lifecycle rules.</p>
+<p>In Java, it replaces brittle status conditionals with explicit state-specific behavior and transition boundaries.</p>
+<p>Used well, State improves clarity, testability, and evolution of workflow-rich domains. Used carelessly, it can create unnecessary class proliferation for simple scenarios.</p>
+<p>The practical standard is clear:</p>
+<ul>
+<li>model meaningful states explicitly</li>
+<li>enforce transitions in one place</li>
+<li>fail invalid transitions loudly</li>
+<li>test each state’s legal and illegal actions</li>
+</ul>
+<p>That is how you keep lifecycle logic understandable as systems scale.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

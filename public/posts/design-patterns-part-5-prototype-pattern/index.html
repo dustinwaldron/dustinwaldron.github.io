@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: Prototype Pattern - Cloning Objects Without Tight Coupling | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-focused guide to the Prototype pattern, including when cloning helps, deep vs shallow copy trade-offs, and common implementation pitfalls.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-5-prototype-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-5-prototype-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-5-prototype-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Prototype Pattern - Cloning Objects Without Tight Coupling">
+  <meta property="og:description" content="A practical Java-focused guide to the Prototype pattern, including when cloning helps, deep vs shallow copy trade-offs, and common implementation pitfalls.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-06T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-06T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Prototype Pattern - Cloning Objects Without Tight Coupling">
+<meta name="twitter:description" content="A practical Java-focused guide to the Prototype pattern, including when cloning helps, deep vs shallow copy trade-offs, and common implementation pitfalls.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Prototype Pattern - Cloning Objects Without Tight Coupling",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-5-prototype-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Prototype Pattern - Cloning Objects Without Tight Coupling",
+  "name": "Design Patterns: Prototype Pattern - Cloning Objects Without Tight Coupling",
+  "description": "A practical Java-focused guide to the Prototype pattern, including when cloning helps, deep vs shallow copy trade-offs, and common implementation pitfalls.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The Prototype Pattern Solves a Construction Cost Problem Some objects are expensive to build.\nThey may require significant setup, default rules, nested data structures, or expensive initialization logic. In those cases, constructing new instances from scratch every time can be wasteful and can spread setup logic across the codebase.\nThe Prototype pattern solves this by creating new objects through cloning an existing instance (the prototype), rather than by direct construction.\nIn Java systems, this can be a practical way to:\nreduce repeated initialization logic improve performance for expensive object creation paths keep creation decoupled from concrete constructors The key is disciplined cloning semantics. Without that, you create subtle bugs around shared mutable state.\nThe Gang of Four Intent The Gang of Four defines Prototype as:\nSpecify the kinds of objects to create using a prototypical instance, and create new objects by copying this prototype.\nPractically, this means:\nkeep a configured baseline instance clone it when creating variants modify only what differs This is especially useful when object creation is complex but resulting objects share a common core configuration.\nA Simple Java Prototype Example Suppose we generate notification templates with mostly shared defaults.\nimport java.util.ArrayList; import java.util.List; public class NotificationTemplate implements Cloneable { private String channel; private String subject; private String body; private List\u003cString\u003e tags; public NotificationTemplate(String channel, String subject, String body, List\u003cString\u003e tags) { this.channel = channel; this.subject = subject; this.body = body; this.tags = tags; } public String getChannel() { return channel; } public void setChannel(String channel) { this.channel = channel; } public String getSubject() { return subject; } public void setSubject(String subject) { this.subject = subject; } public String getBody() { return body; } public void setBody(String body) { this.body = body; } public List\u003cString\u003e getTags() { return tags; } @Override public NotificationTemplate clone() { try { NotificationTemplate copy = (NotificationTemplate) super.clone(); copy.tags = new ArrayList\u003c\u003e(this.tags); // deep copy mutable list return copy; } catch (CloneNotSupportedException e) { throw new IllegalStateException(\"Clone failed\", e); } } } Usage:\nNotificationTemplate baseTemplate = new NotificationTemplate( \"EMAIL\", \"Welcome!\", \"Hello and welcome to the platform.\", List.of(\"transactional\", \"welcome\") ); NotificationTemplate vipTemplate = baseTemplate.clone(); vipTemplate.setSubject(\"Welcome, VIP Member!\"); vipTemplate.setBody(\"Hello VIP member. Thank you for joining.\"); This avoids rebuilding all defaults repeatedly while keeping per-instance customization clear.\nShallow vs Deep Copy: The Core Engineering Risk Prototype is straightforward until mutable nested state is involved.\nShallow copy Copies primitive fields and object references, but nested objects are shared.\nDeep copy Copies nested mutable objects so clones are fully isolated.\nIf you shallow-copy mutable collections or nested objects unintentionally, one clone can mutate another clone’s state. These are painful bugs because behavior looks non-deterministic under load.\nA practical rule:\nimmutable fields: shallow copy is fine mutable fields: deep copy intentionally Prototype quality is mostly about copy correctness.\nJava Prototype Registry Example A common implementation is to keep a registry of reusable prototypes.\nimport java.util.HashMap; import java.util.Map; public class ReportPrototypeRegistry { private final Map\u003cString, ReportConfig\u003e prototypes = new HashMap\u003c\u003e(); public void register(String key, ReportConfig prototype) { prototypes.put(key, prototype); } public ReportConfig create(String key) { ReportConfig prototype = prototypes.get(key); if (prototype == null) { throw new IllegalArgumentException(\"No prototype registered for key: \" + key); } return prototype.clone(); } } And a prototype object:\nimport java.util.HashMap; import java.util.Map; public class ReportConfig implements Cloneable { private String format; private Map\u003cString, String\u003e filters; private boolean includeCharts; public ReportConfig(String format, Map\u003cString, String\u003e filters, boolean includeCharts) { this.format = format; this.filters = filters; this.includeCharts = includeCharts; } public void setFormat(String format) { this.format = format; } public void setIncludeCharts(boolean includeCharts) { this.includeCharts = includeCharts; } public Map\u003cString, String\u003e getFilters() { return filters; } @Override public ReportConfig clone() { try { ReportConfig copy = (ReportConfig) super.clone(); copy.filters = new HashMap\u003c\u003e(this.filters); // deep copy mutable map return copy; } catch (CloneNotSupportedException e) { throw new IllegalStateException(\"Clone failed\", e); } } } Usage:\nReportPrototypeRegistry registry = new ReportPrototypeRegistry(); registry.register( \"monthly-finance\", new ReportConfig(\"PDF\", Map.of(\"region\", \"NA\", \"period\", \"monthly\"), true) ); ReportConfig report = registry.create(\"monthly-finance\"); report.setFormat(\"CSV\"); report.getFilters().put(\"region\", \"EMEA\"); This pattern keeps baseline configuration centralized and variant creation cheap.\nPrototype vs Factory Method Factory Method picks which concrete type to instantiate. Prototype clones an existing configured instance. If your main challenge is type selection, start with Factory Method.\nIf your main challenge is efficiently creating many similar configured objects, Prototype is often better.\nIn mature systems, they can be combined: Factory Method chooses a prototype family, then cloning creates concrete variants.\nPrototype vs Builder Builder focuses on step-by-step assembly of a complex object. Prototype focuses on copying a pre-configured baseline. If object creation requires many optional parameters and validation, Builder is usually clearer.\nIf most objects share a stable baseline and only differ slightly, Prototype can reduce repetitive setup.\nSOLID Alignment Prototype can support SOLID when used intentionally:\nOpen/Closed Principle You can introduce new prototype variants without modifying existing client logic.\nDependency Inversion Principle Clients can depend on an interface like Prototype rather than concrete constructors.\nSingle Responsibility Principle Prototype objects encapsulate copy behavior; clients focus on business behavior.\nLike all patterns, the value comes from controlled application, not blanket usage.\nCommon Mistakes 1. Incorrect clone semantics Partial deep copies create shared mutable state leaks.\n2. Treating Cloneable as a complete solution Cloneable in Java is low-level and easy to misuse. Many teams prefer explicit copy constructors or static copy methods for clarity.\n3. Cloning objects with external handles Cloning resources like DB connections, thread pools, or sockets is usually unsafe and conceptually wrong.\n4. Overusing Prototype when constructors are simple If construction is cheap and clear, Prototype adds complexity without meaningful benefit.\nA Practical Java Alternative: Copy Constructor In many codebases, copy constructors are easier to reason about than clone():\npublic class EmailSettings { private String fromAddress; private String replyTo; public EmailSettings(String fromAddress, String replyTo) { this.fromAddress = fromAddress; this.replyTo = replyTo; } public EmailSettings(EmailSettings other) { this.fromAddress = other.fromAddress; this.replyTo = other.replyTo; } } You still get Prototype-like behavior with more explicit semantics and fewer clone() pitfalls.\nThis is often the better production choice unless you need strict cloning mechanics for framework consistency.\nFinal Thoughts The Prototype pattern is valuable when constructing objects from scratch is expensive or repetitive, and when many instances share a baseline configuration.\nIn Java, its real challenge is not whether cloning works—it is whether cloning is correct, especially around mutable nested state.\nUsed well, Prototype can reduce duplication and improve performance in object-heavy workflows. Used carelessly, it introduces hidden state-sharing bugs that are hard to trace.\nThe right approach is pragmatic:\nuse Prototype when baseline copying is the natural fit enforce explicit copy semantics avoid cloning unsafe resource-bearing objects prefer simpler construction patterns when they are sufficient That is the pattern discipline that keeps architecture useful and maintainable.\n",
+  "wordCount" : "1112",
+  "inLanguage": "en",
+  "datePublished": "2026-10-06T11:00:00-04:00",
+  "dateModified": "2026-10-06T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-5-prototype-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Prototype Pattern - Cloning Objects Without Tight Coupling
+    </h1>
+    <div class="post-description">
+      A practical Java-focused guide to the Prototype pattern, including when cloning helps, deep vs shallow copy trade-offs, and common implementation pitfalls.
+    </div>
+    <div class="post-meta"><span title='2026-10-06 11:00:00 -0400 EDT'>October 6, 2026</span>&nbsp;·&nbsp;<span>6 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-prototype-pattern-solves-a-construction-cost-problem">The Prototype Pattern Solves a Construction Cost Problem</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#a-simple-java-prototype-example">A Simple Java Prototype Example</a></li>
+    <li><a href="#shallow-vs-deep-copy-the-core-engineering-risk">Shallow vs Deep Copy: The Core Engineering Risk</a>
+      <ul>
+        <li><a href="#shallow-copy">Shallow copy</a></li>
+        <li><a href="#deep-copy">Deep copy</a></li>
+      </ul>
+    </li>
+    <li><a href="#java-prototype-registry-example">Java Prototype Registry Example</a></li>
+    <li><a href="#prototype-vs-factory-method">Prototype vs Factory Method</a></li>
+    <li><a href="#prototype-vs-builder">Prototype vs Builder</a></li>
+    <li><a href="#solid-alignment">SOLID Alignment</a>
+      <ul>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#common-mistakes">Common Mistakes</a>
+      <ul>
+        <li><a href="#1-incorrect-clone-semantics">1. Incorrect clone semantics</a></li>
+        <li><a href="#2-treating-cloneable-as-a-complete-solution">2. Treating <code>Cloneable</code> as a complete solution</a></li>
+        <li><a href="#3-cloning-objects-with-external-handles">3. Cloning objects with external handles</a></li>
+        <li><a href="#4-overusing-prototype-when-constructors-are-simple">4. Overusing Prototype when constructors are simple</a></li>
+      </ul>
+    </li>
+    <li><a href="#a-practical-java-alternative-copy-constructor">A Practical Java Alternative: Copy Constructor</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-prototype-pattern-solves-a-construction-cost-problem">The Prototype Pattern Solves a Construction Cost Problem<a hidden class="anchor" aria-hidden="true" href="#the-prototype-pattern-solves-a-construction-cost-problem">#</a></h2>
+<p>Some objects are expensive to build.</p>
+<p>They may require significant setup, default rules, nested data structures, or expensive initialization logic. In those cases, constructing new instances from scratch every time can be wasteful and can spread setup logic across the codebase.</p>
+<p>The Prototype pattern solves this by creating new objects through cloning an existing instance (the prototype), rather than by direct construction.</p>
+<p>In Java systems, this can be a practical way to:</p>
+<ul>
+<li>reduce repeated initialization logic</li>
+<li>improve performance for expensive object creation paths</li>
+<li>keep creation decoupled from concrete constructors</li>
+</ul>
+<p>The key is disciplined cloning semantics. Without that, you create subtle bugs around shared mutable state.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four defines Prototype as:</p>
+<blockquote>
+<p>Specify the kinds of objects to create using a prototypical instance, and create new objects by copying this prototype.</p>
+</blockquote>
+<p>Practically, this means:</p>
+<ul>
+<li>keep a configured baseline instance</li>
+<li>clone it when creating variants</li>
+<li>modify only what differs</li>
+</ul>
+<p>This is especially useful when object creation is complex but resulting objects share a common core configuration.</p>
+<hr>
+<h2 id="a-simple-java-prototype-example">A Simple Java Prototype Example<a hidden class="anchor" aria-hidden="true" href="#a-simple-java-prototype-example">#</a></h2>
+<p>Suppose we generate notification templates with mostly shared defaults.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.ArrayList</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.List</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">NotificationTemplate</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">Cloneable</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">channel</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">subject</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">body</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">tags</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">NotificationTemplate</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">channel</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">subject</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">body</span><span class="p">,</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">tags</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">channel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">channel</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">subject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subject</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">body</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tags</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">getChannel</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">channel</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setChannel</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">channel</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="na">channel</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">channel</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">getSubject</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">subject</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setSubject</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">subject</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="na">subject</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">subject</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="nf">getBody</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">body</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setBody</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">body</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="na">body</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">body</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">getTags</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">tags</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">NotificationTemplate</span><span class="w"> </span><span class="nf">clone</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">NotificationTemplate</span><span class="w"> </span><span class="n">copy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">NotificationTemplate</span><span class="p">)</span><span class="w"> </span><span class="kd">super</span><span class="p">.</span><span class="na">clone</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">copy</span><span class="p">.</span><span class="na">tags</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">tags</span><span class="p">);</span><span class="w"> </span><span class="c1">// deep copy mutable list</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">copy</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">CloneNotSupportedException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Clone failed&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Usage:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">NotificationTemplate</span><span class="w"> </span><span class="n">baseTemplate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">NotificationTemplate</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;EMAIL&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;Welcome!&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;Hello and welcome to the platform.&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">List</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="s">&#34;transactional&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;welcome&#34;</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">NotificationTemplate</span><span class="w"> </span><span class="n">vipTemplate</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">baseTemplate</span><span class="p">.</span><span class="na">clone</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">vipTemplate</span><span class="p">.</span><span class="na">setSubject</span><span class="p">(</span><span class="s">&#34;Welcome, VIP Member!&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">vipTemplate</span><span class="p">.</span><span class="na">setBody</span><span class="p">(</span><span class="s">&#34;Hello VIP member. Thank you for joining.&#34;</span><span class="p">);</span><span class="w">
+</span></span></span></code></pre></div><p>This avoids rebuilding all defaults repeatedly while keeping per-instance customization clear.</p>
+<hr>
+<h2 id="shallow-vs-deep-copy-the-core-engineering-risk">Shallow vs Deep Copy: The Core Engineering Risk<a hidden class="anchor" aria-hidden="true" href="#shallow-vs-deep-copy-the-core-engineering-risk">#</a></h2>
+<p>Prototype is straightforward until mutable nested state is involved.</p>
+<h3 id="shallow-copy">Shallow copy<a hidden class="anchor" aria-hidden="true" href="#shallow-copy">#</a></h3>
+<p>Copies primitive fields and object references, but nested objects are shared.</p>
+<h3 id="deep-copy">Deep copy<a hidden class="anchor" aria-hidden="true" href="#deep-copy">#</a></h3>
+<p>Copies nested mutable objects so clones are fully isolated.</p>
+<p>If you shallow-copy mutable collections or nested objects unintentionally, one clone can mutate another clone’s state. These are painful bugs because behavior looks non-deterministic under load.</p>
+<p>A practical rule:</p>
+<ul>
+<li>immutable fields: shallow copy is fine</li>
+<li>mutable fields: deep copy intentionally</li>
+</ul>
+<p>Prototype quality is mostly about copy correctness.</p>
+<hr>
+<h2 id="java-prototype-registry-example">Java Prototype Registry Example<a hidden class="anchor" aria-hidden="true" href="#java-prototype-registry-example">#</a></h2>
+<p>A common implementation is to keep a registry of reusable prototypes.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.HashMap</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Map</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">ReportPrototypeRegistry</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">ReportConfig</span><span class="o">&gt;</span><span class="w"> </span><span class="n">prototypes</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">HashMap</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">register</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">ReportConfig</span><span class="w"> </span><span class="n">prototype</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">prototypes</span><span class="p">.</span><span class="na">put</span><span class="p">(</span><span class="n">key</span><span class="p">,</span><span class="w"> </span><span class="n">prototype</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">ReportConfig</span><span class="w"> </span><span class="nf">create</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">key</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">ReportConfig</span><span class="w"> </span><span class="n">prototype</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">prototypes</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">key</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">prototype</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalArgumentException</span><span class="p">(</span><span class="s">&#34;No prototype registered for key: &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">key</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">prototype</span><span class="p">.</span><span class="na">clone</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>And a prototype object:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.HashMap</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Map</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">ReportConfig</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">Cloneable</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">format</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">filters</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="n">includeCharts</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">ReportConfig</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">format</span><span class="p">,</span><span class="w"> </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="n">filters</span><span class="p">,</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="n">includeCharts</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">filters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">filters</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">includeCharts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">includeCharts</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setFormat</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">format</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="na">format</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">format</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setIncludeCharts</span><span class="p">(</span><span class="kt">boolean</span><span class="w"> </span><span class="n">includeCharts</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="na">includeCharts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">includeCharts</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">getFilters</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="n">filters</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">ReportConfig</span><span class="w"> </span><span class="nf">clone</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">ReportConfig</span><span class="w"> </span><span class="n">copy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="n">ReportConfig</span><span class="p">)</span><span class="w"> </span><span class="kd">super</span><span class="p">.</span><span class="na">clone</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">copy</span><span class="p">.</span><span class="na">filters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">HashMap</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="na">filters</span><span class="p">);</span><span class="w"> </span><span class="c1">// deep copy mutable map</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="n">copy</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="n">CloneNotSupportedException</span><span class="w"> </span><span class="n">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">IllegalStateException</span><span class="p">(</span><span class="s">&#34;Clone failed&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">e</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Usage:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">ReportPrototypeRegistry</span><span class="w"> </span><span class="n">registry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ReportPrototypeRegistry</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">registry</span><span class="p">.</span><span class="na">register</span><span class="p">(</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="s">&#34;monthly-finance&#34;</span><span class="p">,</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="k">new</span><span class="w"> </span><span class="n">ReportConfig</span><span class="p">(</span><span class="s">&#34;PDF&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">Map</span><span class="p">.</span><span class="na">of</span><span class="p">(</span><span class="s">&#34;region&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;NA&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;period&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;monthly&#34;</span><span class="p">),</span><span class="w"> </span><span class="kc">true</span><span class="p">)</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">ReportConfig</span><span class="w"> </span><span class="n">report</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">registry</span><span class="p">.</span><span class="na">create</span><span class="p">(</span><span class="s">&#34;monthly-finance&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">report</span><span class="p">.</span><span class="na">setFormat</span><span class="p">(</span><span class="s">&#34;CSV&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">report</span><span class="p">.</span><span class="na">getFilters</span><span class="p">().</span><span class="na">put</span><span class="p">(</span><span class="s">&#34;region&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;EMEA&#34;</span><span class="p">);</span><span class="w">
+</span></span></span></code></pre></div><p>This pattern keeps baseline configuration centralized and variant creation cheap.</p>
+<hr>
+<h2 id="prototype-vs-factory-method">Prototype vs Factory Method<a hidden class="anchor" aria-hidden="true" href="#prototype-vs-factory-method">#</a></h2>
+<ul>
+<li><strong>Factory Method</strong> picks which concrete type to instantiate.</li>
+<li><strong>Prototype</strong> clones an existing configured instance.</li>
+</ul>
+<p>If your main challenge is <strong>type selection</strong>, start with Factory Method.<br>
+If your main challenge is <strong>efficiently creating many similar configured objects</strong>, Prototype is often better.</p>
+<p>In mature systems, they can be combined: Factory Method chooses a prototype family, then cloning creates concrete variants.</p>
+<hr>
+<h2 id="prototype-vs-builder">Prototype vs Builder<a hidden class="anchor" aria-hidden="true" href="#prototype-vs-builder">#</a></h2>
+<ul>
+<li><strong>Builder</strong> focuses on step-by-step assembly of a complex object.</li>
+<li><strong>Prototype</strong> focuses on copying a pre-configured baseline.</li>
+</ul>
+<p>If object creation requires many optional parameters and validation, Builder is usually clearer.<br>
+If most objects share a stable baseline and only differ slightly, Prototype can reduce repetitive setup.</p>
+<hr>
+<h2 id="solid-alignment">SOLID Alignment<a hidden class="anchor" aria-hidden="true" href="#solid-alignment">#</a></h2>
+<p>Prototype can support SOLID when used intentionally:</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>You can introduce new prototype variants without modifying existing client logic.</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>Clients can depend on an interface like <code>Prototype&lt;T&gt;</code> rather than concrete constructors.</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>Prototype objects encapsulate copy behavior; clients focus on business behavior.</p>
+<p>Like all patterns, the value comes from controlled application, not blanket usage.</p>
+<hr>
+<h2 id="common-mistakes">Common Mistakes<a hidden class="anchor" aria-hidden="true" href="#common-mistakes">#</a></h2>
+<h3 id="1-incorrect-clone-semantics">1. Incorrect clone semantics<a hidden class="anchor" aria-hidden="true" href="#1-incorrect-clone-semantics">#</a></h3>
+<p>Partial deep copies create shared mutable state leaks.</p>
+<h3 id="2-treating-cloneable-as-a-complete-solution">2. Treating <code>Cloneable</code> as a complete solution<a hidden class="anchor" aria-hidden="true" href="#2-treating-cloneable-as-a-complete-solution">#</a></h3>
+<p><code>Cloneable</code> in Java is low-level and easy to misuse. Many teams prefer explicit copy constructors or static copy methods for clarity.</p>
+<h3 id="3-cloning-objects-with-external-handles">3. Cloning objects with external handles<a hidden class="anchor" aria-hidden="true" href="#3-cloning-objects-with-external-handles">#</a></h3>
+<p>Cloning resources like DB connections, thread pools, or sockets is usually unsafe and conceptually wrong.</p>
+<h3 id="4-overusing-prototype-when-constructors-are-simple">4. Overusing Prototype when constructors are simple<a hidden class="anchor" aria-hidden="true" href="#4-overusing-prototype-when-constructors-are-simple">#</a></h3>
+<p>If construction is cheap and clear, Prototype adds complexity without meaningful benefit.</p>
+<hr>
+<h2 id="a-practical-java-alternative-copy-constructor">A Practical Java Alternative: Copy Constructor<a hidden class="anchor" aria-hidden="true" href="#a-practical-java-alternative-copy-constructor">#</a></h2>
+<p>In many codebases, copy constructors are easier to reason about than <code>clone()</code>:</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">EmailSettings</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">fromAddress</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">replyTo</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">EmailSettings</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">fromAddress</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">replyTo</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">fromAddress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fromAddress</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">replyTo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">replyTo</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">EmailSettings</span><span class="p">(</span><span class="n">EmailSettings</span><span class="w"> </span><span class="n">other</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">fromAddress</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">other</span><span class="p">.</span><span class="na">fromAddress</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">replyTo</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">other</span><span class="p">.</span><span class="na">replyTo</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>You still get Prototype-like behavior with more explicit semantics and fewer <code>clone()</code> pitfalls.</p>
+<p>This is often the better production choice unless you need strict cloning mechanics for framework consistency.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Prototype pattern is valuable when constructing objects from scratch is expensive or repetitive, and when many instances share a baseline configuration.</p>
+<p>In Java, its real challenge is not whether cloning works—it is whether cloning is correct, especially around mutable nested state.</p>
+<p>Used well, Prototype can reduce duplication and improve performance in object-heavy workflows. Used carelessly, it introduces hidden state-sharing bugs that are hard to trace.</p>
+<p>The right approach is pragmatic:</p>
+<ul>
+<li>use Prototype when baseline copying is the natural fit</li>
+<li>enforce explicit copy semantics</li>
+<li>avoid cloning unsafe resource-bearing objects</li>
+<li>prefer simpler construction patterns when they are sufficient</li>
+</ul>
+<p>That is the pattern discipline that keeps architecture useful and maintainable.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

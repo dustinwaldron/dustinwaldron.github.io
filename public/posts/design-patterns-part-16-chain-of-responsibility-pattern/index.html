@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: Chain of Responsibility Pattern - Routing Requests Through Composable Handlers | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-focused guide to the Chain of Responsibility pattern, including request pipelines, short-circuit handling, and production trade-offs.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-16-chain-of-responsibility-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-16-chain-of-responsibility-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-16-chain-of-responsibility-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Chain of Responsibility Pattern - Routing Requests Through Composable Handlers">
+  <meta property="og:description" content="A practical Java-focused guide to the Chain of Responsibility pattern, including request pipelines, short-circuit handling, and production trade-offs.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-17T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-17T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Chain of Responsibility Pattern - Routing Requests Through Composable Handlers">
+<meta name="twitter:description" content="A practical Java-focused guide to the Chain of Responsibility pattern, including request pipelines, short-circuit handling, and production trade-offs.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Chain of Responsibility Pattern - Routing Requests Through Composable Handlers",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-16-chain-of-responsibility-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Chain of Responsibility Pattern - Routing Requests Through Composable Handlers",
+  "name": "Design Patterns: Chain of Responsibility Pattern - Routing Requests Through Composable Handlers",
+  "description": "A practical Java-focused guide to the Chain of Responsibility pattern, including request pipelines, short-circuit handling, and production trade-offs.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The Chain of Responsibility Pattern Solves a Routing and Decision Flow Problem Many systems process requests through a sequence of checks and transformations:\nauthentication authorization validation enrichment execution The anti-pattern is one large method that does all of this with nested branching. It becomes fragile, hard to test, and difficult to evolve when steps change.\nThe Chain of Responsibility pattern solves this by passing a request through a chain of handlers. Each handler can process the request, pass it onward, or stop the chain.\nIn Java systems, this is a practical pattern for request pipelines, middleware-style processing, and policy enforcement flows.\nThe Gang of Four Intent The Gang of Four defines Chain of Responsibility as:\nAvoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request.\nPractically, this means:\ndefine a common handler contract link handlers in sequence let each handler decide whether and how to continue This keeps request senders decoupled from concrete handling logic and order details.\nWhy Teams Use Chain of Responsibility Without this pattern, teams usually get:\ngiant conditional dispatch blocks duplicate pre-check logic in multiple services difficult-to-reuse validation/enforcement steps brittle control flow when adding/removing stages With a chain:\neach concern becomes a focused handler ordering is explicit and configurable tests can target each stage independently cross-cutting pipeline behavior becomes composable Java Example: API Request Processing Pipeline Request and response public record ApiRequest(String userId, String token, String payload) {} public record ApiResponse(int statusCode, String body) {} Handler contract public interface RequestHandler { ApiResponse handle(ApiRequest request); } Base chain helper public abstract class AbstractHandler implements RequestHandler { private RequestHandler next; public AbstractHandler setNext(RequestHandler next) { this.next = next; return this; } protected ApiResponse next(ApiRequest request) { if (next == null) { return new ApiResponse(200, \"OK\"); } return next.handle(request); } } Concrete handlers public class AuthenticationHandler extends AbstractHandler { @Override public ApiResponse handle(ApiRequest request) { if (request.token() == null || request.token().isBlank()) { return new ApiResponse(401, \"Missing auth token\"); } return next(request); } } public class AuthorizationHandler extends AbstractHandler { @Override public ApiResponse handle(ApiRequest request) { if (!request.userId().startsWith(\"user-\")) { return new ApiResponse(403, \"User is not authorized\"); } return next(request); } } public class ValidationHandler extends AbstractHandler { @Override public ApiResponse handle(ApiRequest request) { if (request.payload() == null || request.payload().isBlank()) { return new ApiResponse(400, \"Payload cannot be empty\"); } return next(request); } } public class BusinessHandler extends AbstractHandler { @Override public ApiResponse handle(ApiRequest request) { return new ApiResponse(200, \"Processed request for \" + request.userId()); } } Chain composition AuthenticationHandler authn = new AuthenticationHandler(); AuthorizationHandler authz = new AuthorizationHandler(); ValidationHandler validation = new ValidationHandler(); BusinessHandler business = new BusinessHandler(); authn.setNext(authz).setNext(validation).setNext(business); ApiResponse response = authn.handle(new ApiRequest(\"user-123\", \"token-abc\", \"hello\")); System.out.println(response.statusCode() + \" - \" + response.body()); This gives clear, composable request handling with short-circuit behavior.\nAnother Java Example: Expense Approval Chain This pattern is common in approval workflows.\nRequest public record ExpenseRequest(String requesterId, long amountCents) {} Handler public interface ExpenseApprover { boolean approve(ExpenseRequest request); } Approvers public class TeamLeadApprover implements ExpenseApprover { private ExpenseApprover next; public TeamLeadApprover setNext(ExpenseApprover next) { this.next = next; return this; } @Override public boolean approve(ExpenseRequest request) { if (request.amountCents() \u003c= 50_000) { return true; } return next != null \u0026\u0026 next.approve(request); } } public class DirectorApprover implements ExpenseApprover { private ExpenseApprover next; public DirectorApprover setNext(ExpenseApprover next) { this.next = next; return this; } @Override public boolean approve(ExpenseRequest request) { if (request.amountCents() \u003c= 500_000) { return true; } return next != null \u0026\u0026 next.approve(request); } } public class CfoApprover implements ExpenseApprover { @Override public boolean approve(ExpenseRequest request) { return request.amountCents() \u003c= 5_000_000; } } This keeps escalation logic clean and extensible.\nChain of Responsibility vs Command Chain of Responsibility routes a request through multiple potential handlers. Command encapsulates a request as an object for execution, queueing, or undo. They can be combined (commands flowing through a chain), but they solve different problems.\nChain of Responsibility vs Decorator Chain of Responsibility: each handler may stop or continue request flow. Decorator: always wraps/delegates while adding behavior around the same operation. If early termination and conditional handling are core requirements, Chain is usually the better fit.\nSOLID Alignment This pattern aligns strongly with SOLID:\nSingle Responsibility Principle Each handler owns one concern.\nOpen/Closed Principle Add or reorder handlers without modifying existing handler internals.\nDependency Inversion Principle Pipeline assembly depends on handler abstractions, not concrete end-to-end logic blocks.\nThis makes request-processing architectures easier to evolve safely.\nCommon Mistakes 1. Hidden chain ordering Order changes behavior. Chain composition should be explicit and test-covered.\n2. Handlers doing too much Overgrown handlers become mini-monoliths. Keep stages narrow and focused.\n3. Unclear stop/continue semantics Document and enforce whether handlers should short-circuit on failure or always continue.\n4. Missing observability Without logging/metrics per stage, production debugging is painful.\nPractical Guidance for Java Teams Use Chain of Responsibility when:\nrequest handling is multi-stage and likely to evolve each stage has distinct concerns early exits and conditional routing are meaningful Avoid it when:\nprocessing is simple and linear with little variation handler abstraction adds indirection without clear benefits a direct service flow is easier to understand and maintain Pattern value comes from clear stage boundaries, not from introducing pipelines by default.\nFinal Thoughts The Chain of Responsibility pattern is a practical way to turn complex request processing into modular, composable stages.\nIn Java, it works especially well for middleware-like flows, policy pipelines, and approval chains where concerns need to remain isolated yet ordered.\nUsed well, it improves maintainability and extensibility. Used carelessly, it creates opaque request paths and debugging pain.\nThe practical standard is clear:\nkeep handlers focused make ordering explicit define stop/continue rules clearly instrument each stage for visibility That is how you build request pipelines that scale with system complexity instead of collapsing under it.\n",
+  "wordCount" : "958",
+  "inLanguage": "en",
+  "datePublished": "2026-10-17T11:00:00-04:00",
+  "dateModified": "2026-10-17T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-16-chain-of-responsibility-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Chain of Responsibility Pattern - Routing Requests Through Composable Handlers
+    </h1>
+    <div class="post-description">
+      A practical Java-focused guide to the Chain of Responsibility pattern, including request pipelines, short-circuit handling, and production trade-offs.
+    </div>
+    <div class="post-meta"><span title='2026-10-17 11:00:00 -0400 EDT'>October 17, 2026</span>&nbsp;·&nbsp;<span>5 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-chain-of-responsibility-pattern-solves-a-routing-and-decision-flow-problem">The Chain of Responsibility Pattern Solves a Routing and Decision Flow Problem</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#why-teams-use-chain-of-responsibility">Why Teams Use Chain of Responsibility</a></li>
+    <li><a href="#java-example-api-request-processing-pipeline">Java Example: API Request Processing Pipeline</a>
+      <ul>
+        <li><a href="#request-and-response">Request and response</a></li>
+        <li><a href="#handler-contract">Handler contract</a></li>
+        <li><a href="#base-chain-helper">Base chain helper</a></li>
+        <li><a href="#concrete-handlers">Concrete handlers</a></li>
+        <li><a href="#chain-composition">Chain composition</a></li>
+      </ul>
+    </li>
+    <li><a href="#another-java-example-expense-approval-chain">Another Java Example: Expense Approval Chain</a>
+      <ul>
+        <li><a href="#request">Request</a></li>
+        <li><a href="#handler">Handler</a></li>
+        <li><a href="#approvers">Approvers</a></li>
+      </ul>
+    </li>
+    <li><a href="#chain-of-responsibility-vs-command">Chain of Responsibility vs Command</a></li>
+    <li><a href="#chain-of-responsibility-vs-decorator">Chain of Responsibility vs Decorator</a></li>
+    <li><a href="#solid-alignment">SOLID Alignment</a>
+      <ul>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#common-mistakes">Common Mistakes</a>
+      <ul>
+        <li><a href="#1-hidden-chain-ordering">1. Hidden chain ordering</a></li>
+        <li><a href="#2-handlers-doing-too-much">2. Handlers doing too much</a></li>
+        <li><a href="#3-unclear-stopcontinue-semantics">3. Unclear stop/continue semantics</a></li>
+        <li><a href="#4-missing-observability">4. Missing observability</a></li>
+      </ul>
+    </li>
+    <li><a href="#practical-guidance-for-java-teams">Practical Guidance for Java Teams</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-chain-of-responsibility-pattern-solves-a-routing-and-decision-flow-problem">The Chain of Responsibility Pattern Solves a Routing and Decision Flow Problem<a hidden class="anchor" aria-hidden="true" href="#the-chain-of-responsibility-pattern-solves-a-routing-and-decision-flow-problem">#</a></h2>
+<p>Many systems process requests through a sequence of checks and transformations:</p>
+<ul>
+<li>authentication</li>
+<li>authorization</li>
+<li>validation</li>
+<li>enrichment</li>
+<li>execution</li>
+</ul>
+<p>The anti-pattern is one large method that does all of this with nested branching. It becomes fragile, hard to test, and difficult to evolve when steps change.</p>
+<p>The Chain of Responsibility pattern solves this by passing a request through a chain of handlers. Each handler can process the request, pass it onward, or stop the chain.</p>
+<p>In Java systems, this is a practical pattern for request pipelines, middleware-style processing, and policy enforcement flows.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four defines Chain of Responsibility as:</p>
+<blockquote>
+<p>Avoid coupling the sender of a request to its receiver by giving more than one object a chance to handle the request.</p>
+</blockquote>
+<p>Practically, this means:</p>
+<ul>
+<li>define a common handler contract</li>
+<li>link handlers in sequence</li>
+<li>let each handler decide whether and how to continue</li>
+</ul>
+<p>This keeps request senders decoupled from concrete handling logic and order details.</p>
+<hr>
+<h2 id="why-teams-use-chain-of-responsibility">Why Teams Use Chain of Responsibility<a hidden class="anchor" aria-hidden="true" href="#why-teams-use-chain-of-responsibility">#</a></h2>
+<p>Without this pattern, teams usually get:</p>
+<ul>
+<li>giant conditional dispatch blocks</li>
+<li>duplicate pre-check logic in multiple services</li>
+<li>difficult-to-reuse validation/enforcement steps</li>
+<li>brittle control flow when adding/removing stages</li>
+</ul>
+<p>With a chain:</p>
+<ul>
+<li>each concern becomes a focused handler</li>
+<li>ordering is explicit and configurable</li>
+<li>tests can target each stage independently</li>
+<li>cross-cutting pipeline behavior becomes composable</li>
+</ul>
+<hr>
+<h2 id="java-example-api-request-processing-pipeline">Java Example: API Request Processing Pipeline<a hidden class="anchor" aria-hidden="true" href="#java-example-api-request-processing-pipeline">#</a></h2>
+<h3 id="request-and-response">Request and response<a hidden class="anchor" aria-hidden="true" href="#request-and-response">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">record</span> <span class="nc">ApiRequest</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">userId</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">token</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">payload</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">record</span> <span class="nc">ApiResponse</span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">statusCode</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">body</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="handler-contract">Handler contract<a hidden class="anchor" aria-hidden="true" href="#handler-contract">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">RequestHandler</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">ApiResponse</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="n">ApiRequest</span><span class="w"> </span><span class="n">request</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="base-chain-helper">Base chain helper<a hidden class="anchor" aria-hidden="true" href="#base-chain-helper">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">abstract</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AbstractHandler</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">RequestHandler</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">RequestHandler</span><span class="w"> </span><span class="n">next</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">AbstractHandler</span><span class="w"> </span><span class="nf">setNext</span><span class="p">(</span><span class="n">RequestHandler</span><span class="w"> </span><span class="n">next</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">protected</span><span class="w"> </span><span class="n">ApiResponse</span><span class="w"> </span><span class="nf">next</span><span class="p">(</span><span class="n">ApiRequest</span><span class="w"> </span><span class="n">request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">next</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ApiResponse</span><span class="p">(</span><span class="n">200</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;OK&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">next</span><span class="p">.</span><span class="na">handle</span><span class="p">(</span><span class="n">request</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="concrete-handlers">Concrete handlers<a hidden class="anchor" aria-hidden="true" href="#concrete-handlers">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AuthenticationHandler</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractHandler</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">ApiResponse</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="n">ApiRequest</span><span class="w"> </span><span class="n">request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="na">token</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">request</span><span class="p">.</span><span class="na">token</span><span class="p">().</span><span class="na">isBlank</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ApiResponse</span><span class="p">(</span><span class="n">401</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Missing auth token&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">next</span><span class="p">(</span><span class="n">request</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AuthorizationHandler</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractHandler</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">ApiResponse</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="n">ApiRequest</span><span class="w"> </span><span class="n">request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">request</span><span class="p">.</span><span class="na">userId</span><span class="p">().</span><span class="na">startsWith</span><span class="p">(</span><span class="s">&#34;user-&#34;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ApiResponse</span><span class="p">(</span><span class="n">403</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;User is not authorized&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">next</span><span class="p">(</span><span class="n">request</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">ValidationHandler</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractHandler</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">ApiResponse</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="n">ApiRequest</span><span class="w"> </span><span class="n">request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="na">payload</span><span class="p">()</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="n">request</span><span class="p">.</span><span class="na">payload</span><span class="p">().</span><span class="na">isBlank</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ApiResponse</span><span class="p">(</span><span class="n">400</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Payload cannot be empty&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">next</span><span class="p">(</span><span class="n">request</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">BusinessHandler</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractHandler</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">ApiResponse</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="n">ApiRequest</span><span class="w"> </span><span class="n">request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ApiResponse</span><span class="p">(</span><span class="n">200</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Processed request for &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">request</span><span class="p">.</span><span class="na">userId</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="chain-composition">Chain composition<a hidden class="anchor" aria-hidden="true" href="#chain-composition">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">AuthenticationHandler</span><span class="w"> </span><span class="n">authn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AuthenticationHandler</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">AuthorizationHandler</span><span class="w"> </span><span class="n">authz</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">AuthorizationHandler</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">ValidationHandler</span><span class="w"> </span><span class="n">validation</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ValidationHandler</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">BusinessHandler</span><span class="w"> </span><span class="n">business</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">BusinessHandler</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">authn</span><span class="p">.</span><span class="na">setNext</span><span class="p">(</span><span class="n">authz</span><span class="p">).</span><span class="na">setNext</span><span class="p">(</span><span class="n">validation</span><span class="p">).</span><span class="na">setNext</span><span class="p">(</span><span class="n">business</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">ApiResponse</span><span class="w"> </span><span class="n">response</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">authn</span><span class="p">.</span><span class="na">handle</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">ApiRequest</span><span class="p">(</span><span class="s">&#34;user-123&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;token-abc&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;hello&#34;</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">response</span><span class="p">.</span><span class="na">statusCode</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34; - &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">response</span><span class="p">.</span><span class="na">body</span><span class="p">());</span><span class="w">
+</span></span></span></code></pre></div><p>This gives clear, composable request handling with short-circuit behavior.</p>
+<hr>
+<h2 id="another-java-example-expense-approval-chain">Another Java Example: Expense Approval Chain<a hidden class="anchor" aria-hidden="true" href="#another-java-example-expense-approval-chain">#</a></h2>
+<p>This pattern is common in approval workflows.</p>
+<h3 id="request">Request<a hidden class="anchor" aria-hidden="true" href="#request">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">record</span> <span class="nc">ExpenseRequest</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">requesterId</span><span class="p">,</span><span class="w"> </span><span class="kt">long</span><span class="w"> </span><span class="n">amountCents</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="handler">Handler<a hidden class="anchor" aria-hidden="true" href="#handler">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">ExpenseApprover</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">approve</span><span class="p">(</span><span class="n">ExpenseRequest</span><span class="w"> </span><span class="n">request</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="approvers">Approvers<a hidden class="anchor" aria-hidden="true" href="#approvers">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">TeamLeadApprover</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ExpenseApprover</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">ExpenseApprover</span><span class="w"> </span><span class="n">next</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">TeamLeadApprover</span><span class="w"> </span><span class="nf">setNext</span><span class="p">(</span><span class="n">ExpenseApprover</span><span class="w"> </span><span class="n">next</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">approve</span><span class="p">(</span><span class="n">ExpenseRequest</span><span class="w"> </span><span class="n">request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="na">amountCents</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">50_000</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">next</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">next</span><span class="p">.</span><span class="na">approve</span><span class="p">(</span><span class="n">request</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">DirectorApprover</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ExpenseApprover</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">ExpenseApprover</span><span class="w"> </span><span class="n">next</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">DirectorApprover</span><span class="w"> </span><span class="nf">setNext</span><span class="p">(</span><span class="n">ExpenseApprover</span><span class="w"> </span><span class="n">next</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">next</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">next</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">approve</span><span class="p">(</span><span class="n">ExpenseRequest</span><span class="w"> </span><span class="n">request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">request</span><span class="p">.</span><span class="na">amountCents</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">500_000</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">next</span><span class="w"> </span><span class="o">!=</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="n">next</span><span class="p">.</span><span class="na">approve</span><span class="p">(</span><span class="n">request</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">CfoApprover</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">ExpenseApprover</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">approve</span><span class="p">(</span><span class="n">ExpenseRequest</span><span class="w"> </span><span class="n">request</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">request</span><span class="p">.</span><span class="na">amountCents</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="n">5_000_000</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This keeps escalation logic clean and extensible.</p>
+<hr>
+<h2 id="chain-of-responsibility-vs-command">Chain of Responsibility vs Command<a hidden class="anchor" aria-hidden="true" href="#chain-of-responsibility-vs-command">#</a></h2>
+<ul>
+<li><strong>Chain of Responsibility</strong> routes a request through multiple potential handlers.</li>
+<li><strong>Command</strong> encapsulates a request as an object for execution, queueing, or undo.</li>
+</ul>
+<p>They can be combined (commands flowing through a chain), but they solve different problems.</p>
+<hr>
+<h2 id="chain-of-responsibility-vs-decorator">Chain of Responsibility vs Decorator<a hidden class="anchor" aria-hidden="true" href="#chain-of-responsibility-vs-decorator">#</a></h2>
+<ul>
+<li><strong>Chain of Responsibility</strong>: each handler may stop or continue request flow.</li>
+<li><strong>Decorator</strong>: always wraps/delegates while adding behavior around the same operation.</li>
+</ul>
+<p>If early termination and conditional handling are core requirements, Chain is usually the better fit.</p>
+<hr>
+<h2 id="solid-alignment">SOLID Alignment<a hidden class="anchor" aria-hidden="true" href="#solid-alignment">#</a></h2>
+<p>This pattern aligns strongly with SOLID:</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>Each handler owns one concern.</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>Add or reorder handlers without modifying existing handler internals.</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>Pipeline assembly depends on handler abstractions, not concrete end-to-end logic blocks.</p>
+<p>This makes request-processing architectures easier to evolve safely.</p>
+<hr>
+<h2 id="common-mistakes">Common Mistakes<a hidden class="anchor" aria-hidden="true" href="#common-mistakes">#</a></h2>
+<h3 id="1-hidden-chain-ordering">1. Hidden chain ordering<a hidden class="anchor" aria-hidden="true" href="#1-hidden-chain-ordering">#</a></h3>
+<p>Order changes behavior. Chain composition should be explicit and test-covered.</p>
+<h3 id="2-handlers-doing-too-much">2. Handlers doing too much<a hidden class="anchor" aria-hidden="true" href="#2-handlers-doing-too-much">#</a></h3>
+<p>Overgrown handlers become mini-monoliths. Keep stages narrow and focused.</p>
+<h3 id="3-unclear-stopcontinue-semantics">3. Unclear stop/continue semantics<a hidden class="anchor" aria-hidden="true" href="#3-unclear-stopcontinue-semantics">#</a></h3>
+<p>Document and enforce whether handlers should short-circuit on failure or always continue.</p>
+<h3 id="4-missing-observability">4. Missing observability<a hidden class="anchor" aria-hidden="true" href="#4-missing-observability">#</a></h3>
+<p>Without logging/metrics per stage, production debugging is painful.</p>
+<hr>
+<h2 id="practical-guidance-for-java-teams">Practical Guidance for Java Teams<a hidden class="anchor" aria-hidden="true" href="#practical-guidance-for-java-teams">#</a></h2>
+<p>Use Chain of Responsibility when:</p>
+<ul>
+<li>request handling is multi-stage and likely to evolve</li>
+<li>each stage has distinct concerns</li>
+<li>early exits and conditional routing are meaningful</li>
+</ul>
+<p>Avoid it when:</p>
+<ul>
+<li>processing is simple and linear with little variation</li>
+<li>handler abstraction adds indirection without clear benefits</li>
+<li>a direct service flow is easier to understand and maintain</li>
+</ul>
+<p>Pattern value comes from clear stage boundaries, not from introducing pipelines by default.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Chain of Responsibility pattern is a practical way to turn complex request processing into modular, composable stages.</p>
+<p>In Java, it works especially well for middleware-like flows, policy pipelines, and approval chains where concerns need to remain isolated yet ordered.</p>
+<p>Used well, it improves maintainability and extensibility. Used carelessly, it creates opaque request paths and debugging pain.</p>
+<p>The practical standard is clear:</p>
+<ul>
+<li>keep handlers focused</li>
+<li>make ordering explicit</li>
+<li>define stop/continue rules clearly</li>
+<li>instrument each stage for visibility</li>
+</ul>
+<p>That is how you build request pipelines that scale with system complexity instead of collapsing under it.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>

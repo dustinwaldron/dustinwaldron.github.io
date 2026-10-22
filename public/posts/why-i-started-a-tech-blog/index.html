@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html lang="en" dir="auto" data-theme="auto">
 
-<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
+<head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="robots" content="noindex, nofollow">
+<meta name="robots" content="index, follow">
 <title>Why I Started a Tech Blog (and How You Can Too with Hugo &#43; GitHub Pages) | Dustin Waldron</title>
 <meta name="keywords" content="github, engineering, blogging">
 <meta name="description" content="My first blog post — plus a guide to setting up your own Hugo blog on GitHub Pages.">
 <meta name="author" content="">
-<link rel="canonical" href="http://localhost:1313/posts/why-i-started-a-tech-blog/">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/">
 <link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
-<link rel="icon" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon.ico">
-<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon.ico">
-<link rel="apple-touch-icon" href="http://localhost:1313/favicon.ico">
-<link rel="mask-icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/why-i-started-a-tech-blog/">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/">
 <noscript>
     <style>
         #theme-toggle,
@@ -66,44 +66,109 @@
         document.querySelector("html").dataset.theme = 'light';
     }
 
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Why I Started a Tech Blog (and How You Can Too with Hugo &#43; GitHub Pages)">
+  <meta property="og:description" content="My first blog post — plus a guide to setting up your own Hugo blog on GitHub Pages.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2025-11-01T11:00:00-04:00">
+    <meta property="article:modified_time" content="2025-11-01T11:00:00-04:00">
+    <meta property="article:tag" content="Github">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Blogging">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Why I Started a Tech Blog (and How You Can Too with Hugo &#43; GitHub Pages)">
+<meta name="twitter:description" content="My first blog post — plus a guide to setting up your own Hugo blog on GitHub Pages.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Why I Started a Tech Blog (and How You Can Too with Hugo + GitHub Pages)",
+      "item": "https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Why I Started a Tech Blog (and How You Can Too with Hugo + GitHub Pages)",
+  "name": "Why I Started a Tech Blog (and How You Can Too with Hugo \u002b GitHub Pages)",
+  "description": "My first blog post — plus a guide to setting up your own Hugo blog on GitHub Pages.",
+  "keywords": [
+    "github", "engineering", "blogging"
+  ],
+  "articleBody": "Why I Started This Blog As engineers, we spend a lot of time building, experimenting, and solving problems. But too often, those lessons stay hidden inside project folders, Slack threads, or our own heads.\nStarting this blog was my way to change that — to document my projects, share what I learn, and hopefully inspire others to build cool things.\n1. Document Projects Writing about a project forces you to clarify your thinking. It’s easy to move on to the next shiny idea, but documentation helps future-you (and others) revisit, maintain, and extend your work.\n2. Share Knowledge Every engineer learns differently, and your perspective might be the one that helps someone finally understand a tricky concept. Sharing knowledge strengthens the community and makes tech more accessible.\n3. Inspire Builders We all got into this field because we love building. When I read other engineers’ blogs, I get inspired to try new stacks, frameworks, or even just better ways of thinking. I hope this blog does the same for someone else.\nHow I Built This Blog: Hugo + GitHub Pages If you’ve been thinking about starting your own tech blog, you can do it in an afternoon. Here’s the path I took to get this one up and running.\nStep 1: Install Hugo Hugo is a static site generator written in Go. It’s fast, flexible, and perfect for developer blogs.\n# for mac brew install hugo # or for Windows choco install hugo-extended Check your install:\nhugo version Step 2: Create a New Site hugo new site my-tech-blog cd my-tech-blog Step 3: Add a Theme Pick a theme you like from themes.gohugo.io.\nExample:\ngit submodule add https://github.com/adityatelange/hugo-PaperMod echo 'theme = \"PaperMod\"' \u003e\u003e hugo.toml Step 4: Add Your First Post hugo new posts/your-awesome-post.md Open the file in your editor, write your first post and save.\nStep 5: Test Locally hugo server Then visit http://localhost:1313 to preview your blog.\nStep 6: Push to GitHub Initialize a repo and push:\ngit init git add . git commit -m \"Initial commit\" git branch -M main git remote add origin https://github.com/yourusername/my-tech-blog.git git push -u origin main Step 7: Deploy with GitHub Pages You can deploy using a GitHub Actions workflow:\nCreate .github/workflows/hugo.yml:\nname: Build and deploy on: push: branches: - main # Set a branch to deploy pull_request: jobs: deploy: runs-on: ubuntu-24.04 concurrency: group: ${{ github.workflow }}-${{ github.ref }} steps: - uses: actions/checkout@v4 with: submodules: true # Fetch Hugo themes (true OR recursive) fetch-depth: 0 # Fetch all history for .GitInfo and .Lastmod - name: Setup Hugo uses: peaceiris/actions-hugo@v3 with: hugo-version: '0.119.0' # extended: true - name: Build run: hugo --minify - name: Deploy uses: peaceiris/actions-gh-pages@v3 if: github.ref == 'refs/heads/main' with: github_token: ${{ secrets.GITHUB_TOKEN }} publish_dir: ./public Push the workflow, and your blog will auto-deploy to https://yourusername.github.io/my-tech-blog/.\nFinal Thoughts Blogging as a developer isn’t just about writing — it’s about creating a living record of your journey.\nIt’s a way to give back, stay accountable, and connect with others who love to build.\nIf you’ve ever thought, “I should start a blog,” — take this as your nudge.\nStart small, share your process, and let others learn alongside you.\nHappy building!\n",
+  "wordCount" : "526",
+  "inLanguage": "en",
+  "datePublished": "2025-11-01T11:00:00-04:00",
+  "dateModified": "2025-11-01T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
 </script>
 </head>
 <body id="top">
     <header class="header">
     <nav class="nav">
         <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
             <div class="logo-switches">
             </div>
         </div>
         <ul id="menu">
             <li>
-                <a href="http://localhost:1313/about/" title="About">
+                <a href="https://dustinwaldron.github.io/about/" title="About">
                     <span>About</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/posts/" title="Posts">
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
                     <span>Posts</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/projects/" title="Projects">
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
                     <span>Projects</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
                     <span>Search</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/categories/" title="Categories">
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
                     <span>Categories</span>
                 </a>
             </li>
             <li>
-                <a href="http://localhost:1313/tags/" title="Tags">
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
                     <span>Tags</span>
                 </a>
             </li>
@@ -249,16 +314,16 @@ Start small, share your process, and let others learn alongside you.</p>
 
   <footer class="post-footer">
     <ul class="post-tags">
-      <li><a href="http://localhost:1313/tags/github/">Github</a></li>
-      <li><a href="http://localhost:1313/tags/engineering/">Engineering</a></li>
-      <li><a href="http://localhost:1313/tags/blogging/">Blogging</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/github/">Github</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/blogging/">Blogging</a></li>
     </ul>
   </footer>
 </article>
     </main>
     
 <footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">Dustin Waldron</a></span> · 
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
 
     <span>
         Powered by

@@ -2,45 +2,143 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>Home on Dustin Waldron</title>
-    <link>http://localhost:1313/</link>
+    <link>https://dustinwaldron.github.io/</link>
     <description>Recent content in Home on Dustin Waldron</description>
     <generator>Hugo -- 0.158.0</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 03 Oct 2026 11:00:00 -0400</lastBuildDate>
-    <atom:link href="http://localhost:1313/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 17 Oct 2026 11:00:00 -0400</lastBuildDate>
+    <atom:link href="https://dustinwaldron.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Design Patterns: Chain of Responsibility Pattern - Routing Requests Through Composable Handlers</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-16-chain-of-responsibility-pattern/</link>
+      <pubDate>Sat, 17 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-16-chain-of-responsibility-pattern/</guid>
+      <description>A practical Java-focused guide to the Chain of Responsibility pattern, including request pipelines, short-circuit handling, and production trade-offs.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Command Pattern - Turning Requests into First-Class Objects</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-15-command-pattern/</link>
+      <pubDate>Fri, 16 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-15-command-pattern/</guid>
+      <description>A practical Java-focused guide to the Command pattern, including request encapsulation, undo support, queues, and production-oriented trade-offs.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Iterator Pattern - Traversing Collections Without Exposing Internals</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-14-iterator-pattern/</link>
+      <pubDate>Thu, 15 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-14-iterator-pattern/</guid>
+      <description>A practical Java-focused guide to the Iterator pattern, including custom traversal logic, fail-fast behavior, and how iterators improve encapsulation.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Observer Pattern - Decoupling Event Producers from Event Consumers</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-13-observer-pattern/</link>
+      <pubDate>Wed, 14 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-13-observer-pattern/</guid>
+      <description>A practical Java-focused guide to the Observer pattern, including event-driven design, synchronous vs asynchronous notifications, and production pitfalls.</description>
+    </item>
+    <item>
+      <title>Design Patterns: State Pattern - Modeling Behavior Through Explicit State Transitions</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-12-state-pattern/</link>
+      <pubDate>Tue, 13 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-12-state-pattern/</guid>
+      <description>A practical Java-focused guide to the State pattern, including transition modeling, cleaner workflow logic, and common pitfalls in production systems.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Strategy Pattern - Replacing Conditionals with Interchangeable Behavior</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-11-strategy-pattern/</link>
+      <pubDate>Mon, 12 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-11-strategy-pattern/</guid>
+      <description>A practical Java-focused guide to the Strategy pattern, including runtime behavior selection, testability benefits, and common implementation pitfalls.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Composite Pattern - Treating Trees and Leaves Uniformly</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-10-composite-pattern/</link>
+      <pubDate>Sun, 11 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-10-composite-pattern/</guid>
+      <description>A practical Java-focused guide to the Composite pattern, including recursive structures, uniform APIs for leaves and groups, and production trade-offs.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Proxy Pattern - Controlling Access Without Changing the Core</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-9-proxy-pattern/</link>
+      <pubDate>Sat, 10 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-9-proxy-pattern/</guid>
+      <description>A practical Java-focused guide to the Proxy pattern, including remote, virtual, and protection proxies with production-oriented examples and trade-offs.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Facade Pattern - Simplifying Complex Subsystems with a Clean API</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-8-facade-pattern/</link>
+      <pubDate>Fri, 09 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-8-facade-pattern/</guid>
+      <description>A practical Java-focused guide to the Facade pattern, including subsystem orchestration, boundary design, and when Facade improves maintainability.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Decorator Pattern - Extending Behavior Without Subclass Explosion</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-7-decorator-pattern/</link>
+      <pubDate>Thu, 08 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-7-decorator-pattern/</guid>
+      <description>A practical Java-focused guide to the Decorator pattern, including composition-first extension, real-world examples, and common pitfalls.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Adapter Pattern - Integrating Incompatible Interfaces Cleanly</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-6-adapter-pattern/</link>
+      <pubDate>Wed, 07 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-6-adapter-pattern/</guid>
+      <description>A practical Java-focused guide to the Adapter pattern, including object vs class adapters, real-world integration examples, and common trade-offs.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Prototype Pattern - Cloning Objects Without Tight Coupling</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-5-prototype-pattern/</link>
+      <pubDate>Tue, 06 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-5-prototype-pattern/</guid>
+      <description>A practical Java-focused guide to the Prototype pattern, including when cloning helps, deep vs shallow copy trade-offs, and common implementation pitfalls.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Builder Pattern - Constructing Complex Objects with Clarity</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-4-builder-pattern/</link>
+      <pubDate>Mon, 05 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-4-builder-pattern/</guid>
+      <description>A practical Java-focused guide to the Builder pattern, including when to use it, how it improves readability and immutability, and common mistakes to avoid.</description>
+    </item>
+    <item>
+      <title>Design Patterns: Factory Method Pattern - Controlling Creation Without Hard Coupling</title>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-3-factory-method-pattern/</link>
+      <pubDate>Sun, 04 Oct 2026 11:00:00 -0400</pubDate>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-3-factory-method-pattern/</guid>
+      <description>A practical Java-focused guide to the Factory Method pattern, including when to use it, how it differs from simple factories and Abstract Factory, and common implementation trade-offs.</description>
+    </item>
     <item>
       <title>Design Patterns: Abstract Factory Pattern - Designing for Families of Related Objects</title>
-      <link>http://localhost:1313/posts/design-patterns-part-2-abstract-factory-pattern/</link>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-2-abstract-factory-pattern/</link>
       <pubDate>Sat, 03 Oct 2026 11:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/posts/design-patterns-part-2-abstract-factory-pattern/</guid>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-2-abstract-factory-pattern/</guid>
       <description>A practical Java-oriented look at the Abstract Factory pattern, including when it helps, how it differs from a simple factory, and how it keeps object creation flexible without creating a mess of conditionals.</description>
     </item>
     <item>
       <title>Design Patterns: Singleton Pattern - When One Instance Is the Right Design</title>
-      <link>http://localhost:1313/posts/design-patterns-part-1-singleton-pattern/</link>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-part-1-singleton-pattern/</link>
       <pubDate>Fri, 02 Oct 2026 11:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/posts/design-patterns-part-1-singleton-pattern/</guid>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-part-1-singleton-pattern/</guid>
       <description>A practical look at the Singleton pattern in Java, including when it helps, when it hurts, and the safest implementation patterns for production code.</description>
     </item>
     <item>
       <title>Design Patterns: Why They Matter and How SOLID Principles Give Them Teeth</title>
-      <link>http://localhost:1313/posts/design-patterns-introduction/</link>
+      <link>https://dustinwaldron.github.io/posts/design-patterns-introduction/</link>
       <pubDate>Thu, 01 Oct 2026 13:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/posts/design-patterns-introduction/</guid>
+      <guid>https://dustinwaldron.github.io/posts/design-patterns-introduction/</guid>
       <description>A principal-engineer view of why design patterns matter, a summary of the Gang of Four book, and how SOLID principles connect to practical Java design.</description>
     </item>
     <item>
       <title>NextJS Pokedex App</title>
-      <link>http://localhost:1313/projects/nextjs-pokedex/</link>
+      <link>https://dustinwaldron.github.io/projects/nextjs-pokedex/</link>
       <pubDate>Sat, 01 Nov 2025 11:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/projects/nextjs-pokedex/</guid>
+      <guid>https://dustinwaldron.github.io/projects/nextjs-pokedex/</guid>
       <description>A nostalgic trip down memory lane and a trip into the future with the latest react hooks</description>
     </item>
     <item>
       <title>Why I Started a Tech Blog (and How You Can Too with Hugo &#43; GitHub Pages)</title>
-      <link>http://localhost:1313/posts/why-i-started-a-tech-blog/</link>
+      <link>https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/</link>
       <pubDate>Sat, 01 Nov 2025 11:00:00 -0400</pubDate>
-      <guid>http://localhost:1313/posts/why-i-started-a-tech-blog/</guid>
+      <guid>https://dustinwaldron.github.io/posts/why-i-started-a-tech-blog/</guid>
       <description>My first blog post — plus a guide to setting up your own Hugo blog on GitHub Pages.</description>
     </item>
   </channel>

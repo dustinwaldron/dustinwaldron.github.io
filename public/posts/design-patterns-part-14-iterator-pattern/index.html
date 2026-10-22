@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Design Patterns: Iterator Pattern - Traversing Collections Without Exposing Internals | Dustin Waldron</title>
+<meta name="keywords" content="architecture, engineering, java, best practices">
+<meta name="description" content="A practical Java-focused guide to the Iterator pattern, including custom traversal logic, fail-fast behavior, and how iterators improve encapsulation.">
+<meta name="author" content="">
+<link rel="canonical" href="https://dustinwaldron.github.io/posts/design-patterns-part-14-iterator-pattern/">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.343cc480b9ffc8f04ccbe5e968ad674880cab773ec19905e93033065c1e7a804.css" integrity="sha256-NDzEgLn/yPBMy&#43;XpaK1nSIDKt3PsGZBekwMwZcHnqAQ=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="apple-touch-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<link rel="mask-icon" href="https://dustinwaldron.github.io/favicon.ico">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://dustinwaldron.github.io/posts/design-patterns-part-14-iterator-pattern/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+        @media (prefers-color-scheme: light) {
+            .list::-webkit-scrollbar-thumb {
+                border-color: var(--code-bg);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://dustinwaldron.github.io/posts/design-patterns-part-14-iterator-pattern/">
+  <meta property="og:site_name" content="Dustin Waldron">
+  <meta property="og:title" content="Design Patterns: Iterator Pattern - Traversing Collections Without Exposing Internals">
+  <meta property="og:description" content="A practical Java-focused guide to the Iterator pattern, including custom traversal logic, fail-fast behavior, and how iterators improve encapsulation.">
+  <meta property="og:locale" content="en-us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-10-15T11:00:00-04:00">
+    <meta property="article:modified_time" content="2026-10-15T11:00:00-04:00">
+    <meta property="article:tag" content="Architecture">
+    <meta property="article:tag" content="Engineering">
+    <meta property="article:tag" content="Java">
+    <meta property="article:tag" content="Best Practices">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Design Patterns: Iterator Pattern - Traversing Collections Without Exposing Internals">
+<meta name="twitter:description" content="A practical Java-focused guide to the Iterator pattern, including custom traversal logic, fail-fast behavior, and how iterators improve encapsulation.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://dustinwaldron.github.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Design Patterns: Iterator Pattern - Traversing Collections Without Exposing Internals",
+      "item": "https://dustinwaldron.github.io/posts/design-patterns-part-14-iterator-pattern/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Design Patterns: Iterator Pattern - Traversing Collections Without Exposing Internals",
+  "name": "Design Patterns: Iterator Pattern - Traversing Collections Without Exposing Internals",
+  "description": "A practical Java-focused guide to the Iterator pattern, including custom traversal logic, fail-fast behavior, and how iterators improve encapsulation.",
+  "keywords": [
+    "architecture", "engineering", "java", "best practices"
+  ],
+  "articleBody": "The Iterator Pattern Solves a Traversal Encapsulation Problem Collections are everywhere in software systems, but traversal logic should not leak data structure internals.\nWithout a clear iteration contract, client code often becomes tightly coupled to:\nindex-based loops tied to list implementations tree traversal details embedded in services ad hoc pagination logic repeated in multiple classes The Iterator pattern solves this by providing a standard way to access elements sequentially without exposing the underlying representation.\nIn Java, this is both foundational and practical. The standard Iterator interface is a direct embodiment of this pattern, and custom iterators remain useful for domain-specific traversal behaviors.\nThe Gang of Four Intent The Gang of Four defines Iterator as:\nProvide a way to access the elements of an aggregate object sequentially without exposing its underlying representation.\nIn practical terms:\naggregate owns storage details iterator owns traversal behavior client consumes a stable traversal interface This keeps data structures replaceable and client logic cleaner.\nWhy Teams Use Iterator in Real Systems Without iterator abstractions, callers often assume too much about collection layout.\nThat causes:\nbrittle client code when internal structures change duplicated traversal logic inconsistent filtering/ordering behavior With iterator-based APIs:\ntraversal behavior is centralized clients depend on sequence contract, not storage mechanics internal representation can evolve safely This is especially useful for custom aggregates, streamed data access, and pagination abstractions.\nJava Example: Custom Iterator for a Backlog Aggregate Domain model public record BacklogItem(String id, String title, int priority) {} Aggregate import java.util.ArrayList; import java.util.Iterator; import java.util.List; public class Backlog implements Iterable\u003cBacklogItem\u003e { private final List\u003cBacklogItem\u003e items = new ArrayList\u003c\u003e(); public void add(BacklogItem item) { items.add(item); } @Override public Iterator\u003cBacklogItem\u003e iterator() { return new PriorityAscendingIterator(items); } } Custom iterator import java.util.ArrayList; import java.util.Comparator; import java.util.Iterator; import java.util.List; import java.util.NoSuchElementException; public class PriorityAscendingIterator implements Iterator\u003cBacklogItem\u003e { private final List\u003cBacklogItem\u003e sorted; private int index = 0; public PriorityAscendingIterator(List\u003cBacklogItem\u003e source) { this.sorted = new ArrayList\u003c\u003e(source); this.sorted.sort(Comparator.comparingInt(BacklogItem::priority)); } @Override public boolean hasNext() { return index \u003c sorted.size(); } @Override public BacklogItem next() { if (!hasNext()) { throw new NoSuchElementException(\"No more backlog items\"); } return sorted.get(index++); } } Usage Backlog backlog = new Backlog(); backlog.add(new BacklogItem(\"B-102\", \"Refactor checkout\", 3)); backlog.add(new BacklogItem(\"B-101\", \"Fix payment timeout\", 1)); backlog.add(new BacklogItem(\"B-103\", \"Improve logging\", 2)); for (BacklogItem item : backlog) { System.out.println(item.id() + \" -\u003e priority \" + item.priority()); } Clients get ordered traversal without needing to know how ordering is implemented.\nAnother Java Example: Tree Iterator Iterators are especially useful for hierarchical structures.\nComponent import java.util.List; public interface OrgNode { String name(); List\u003cOrgNode\u003e children(); } Iterator with depth-first traversal import java.util.ArrayDeque; import java.util.Deque; import java.util.Iterator; import java.util.NoSuchElementException; public class DepthFirstOrgIterator implements Iterator\u003cOrgNode\u003e { private final Deque\u003cOrgNode\u003e stack = new ArrayDeque\u003c\u003e(); public DepthFirstOrgIterator(OrgNode root) { stack.push(root); } @Override public boolean hasNext() { return !stack.isEmpty(); } @Override public OrgNode next() { if (!hasNext()) { throw new NoSuchElementException(\"No more nodes\"); } OrgNode current = stack.pop(); var children = current.children(); for (int i = children.size() - 1; i \u003e= 0; i--) { stack.push(children.get(i)); } return current; } } This keeps traversal behavior reusable and separate from node storage details.\nExternal Iterator vs Internal Iterator Two common styles:\nExternal iterator: client controls iteration (hasNext()/next()). Internal iterator: aggregate controls iteration and invokes callback/lambda. Java’s Iterator is external, while forEach-style APIs are internal.\nUse external iteration when caller needs flow control (break, resume, conditional advancement).\nUse internal iteration when declarative processing is clearer.\nIterator and Fail-Fast Behavior in Java Many Java collection iterators are fail-fast: if the collection is structurally modified during iteration (outside iterator methods), a ConcurrentModificationException may occur.\nThis is a safety feature, not a synchronization guarantee.\nFor concurrent mutation scenarios, use appropriate concurrent collections or snapshot iterators when semantics require stable traversal views.\nIterator vs Stream In modern Java:\nIterator is imperative and stateful traversal. Stream is declarative pipeline processing. Streams are often preferable for transformation pipelines; iterators are useful when you need custom traversal control, lazy stepping, or backward-compatible APIs.\nBoth can coexist cleanly in mature codebases.\nSOLID Alignment Iterator aligns with SOLID principles:\nSingle Responsibility Principle Aggregates manage data; iterators manage traversal mechanics.\nOpen/Closed Principle You can add new traversal strategies (e.g., priority, depth-first, breadth-first) without modifying aggregate clients.\nDependency Inversion Principle Clients depend on Iterator/Iterable abstractions instead of concrete data structure internals.\nThis supports maintainable evolution of collection-heavy domains.\nCommon Mistakes 1. Exposing mutable internals through iteration If iterator returns mutable internal references without boundaries, encapsulation is weakened.\n2. Mixing traversal side effects into next() Keep iteration mechanics predictable. Side effects should be explicit and testable.\n3. Ignoring end-of-sequence contracts next() must throw NoSuchElementException when exhausted.\n4. Implementing unnecessary custom iterators Prefer built-in collections and streams unless custom traversal semantics are truly needed.\nPractical Guidance for Java Teams Use Iterator when:\nclients need uniform sequential access traversal logic is non-trivial or reusable internal representation should remain hidden Avoid custom Iterator when:\nbuilt-in collection iteration is already enough added abstraction does not provide clear traversal value stream pipelines express the behavior more clearly Pattern discipline means introducing custom iterators for real traversal concerns, not for stylistic consistency.\nFinal Thoughts The Iterator pattern is foundational because traversal is universal, but representation should remain encapsulated.\nIn Java, it underpins the collections ecosystem and remains valuable for domain-specific traversal strategies where simple loops are not sufficient.\nUsed well, Iterator keeps client code decoupled from storage details and makes traversal behavior reusable and testable. Used carelessly, it can add unnecessary complexity or leak internals.\nThe practical standard is clear:\nseparate traversal from storage define predictable iterator contracts choose built-in iteration first, custom iterators when justified test traversal edge cases (empty, single, deep, concurrent mutation semantics) That is how you keep collection-heavy code understandable and resilient as models evolve.\n",
+  "wordCount" : "945",
+  "inLanguage": "en",
+  "datePublished": "2026-10-15T11:00:00-04:00",
+  "dateModified": "2026-10-15T11:00:00-04:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://dustinwaldron.github.io/posts/design-patterns-part-14-iterator-pattern/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Dustin Waldron",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://dustinwaldron.github.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="nav">
+        <div class="logo">
+            <a href="https://dustinwaldron.github.io/" accesskey="h" title="Dustin Waldron (Alt + H)">Dustin Waldron</a>
+            <div class="logo-switches">
+            </div>
+        </div>
+        <ul id="menu">
+            <li>
+                <a href="https://dustinwaldron.github.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/projects/" title="Projects">
+                    <span>Projects</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/categories/" title="Categories">
+                    <span>Categories</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://dustinwaldron.github.io/tags/" title="Tags">
+                    <span>Tags</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Design Patterns: Iterator Pattern - Traversing Collections Without Exposing Internals
+    </h1>
+    <div class="post-description">
+      A practical Java-focused guide to the Iterator pattern, including custom traversal logic, fail-fast behavior, and how iterators improve encapsulation.
+    </div>
+    <div class="post-meta"><span title='2026-10-15 11:00:00 -0400 EDT'>October 15, 2026</span>&nbsp;·&nbsp;<span>5 min</span>
+
+</div>
+  </header> <div class="toc">
+    <details  open>
+        <summary accesskey="c" title="(Alt + C)">
+            <span class="details">Table of Contents</span>
+        </summary>
+
+        <div class="inner"><nav id="TableOfContents">
+  <ul>
+    <li><a href="#the-iterator-pattern-solves-a-traversal-encapsulation-problem">The Iterator Pattern Solves a Traversal Encapsulation Problem</a></li>
+    <li><a href="#the-gang-of-four-intent">The Gang of Four Intent</a></li>
+    <li><a href="#why-teams-use-iterator-in-real-systems">Why Teams Use Iterator in Real Systems</a></li>
+    <li><a href="#java-example-custom-iterator-for-a-backlog-aggregate">Java Example: Custom Iterator for a Backlog Aggregate</a>
+      <ul>
+        <li><a href="#domain-model">Domain model</a></li>
+        <li><a href="#aggregate">Aggregate</a></li>
+        <li><a href="#custom-iterator">Custom iterator</a></li>
+        <li><a href="#usage">Usage</a></li>
+      </ul>
+    </li>
+    <li><a href="#another-java-example-tree-iterator">Another Java Example: Tree Iterator</a>
+      <ul>
+        <li><a href="#component">Component</a></li>
+        <li><a href="#iterator-with-depth-first-traversal">Iterator with depth-first traversal</a></li>
+      </ul>
+    </li>
+    <li><a href="#external-iterator-vs-internal-iterator">External Iterator vs Internal Iterator</a></li>
+    <li><a href="#iterator-and-fail-fast-behavior-in-java">Iterator and Fail-Fast Behavior in Java</a></li>
+    <li><a href="#iterator-vs-stream">Iterator vs Stream</a></li>
+    <li><a href="#solid-alignment">SOLID Alignment</a>
+      <ul>
+        <li><a href="#single-responsibility-principle">Single Responsibility Principle</a></li>
+        <li><a href="#openclosed-principle">Open/Closed Principle</a></li>
+        <li><a href="#dependency-inversion-principle">Dependency Inversion Principle</a></li>
+      </ul>
+    </li>
+    <li><a href="#common-mistakes">Common Mistakes</a>
+      <ul>
+        <li><a href="#1-exposing-mutable-internals-through-iteration">1. Exposing mutable internals through iteration</a></li>
+        <li><a href="#2-mixing-traversal-side-effects-into-next">2. Mixing traversal side effects into <code>next()</code></a></li>
+        <li><a href="#3-ignoring-end-of-sequence-contracts">3. Ignoring end-of-sequence contracts</a></li>
+        <li><a href="#4-implementing-unnecessary-custom-iterators">4. Implementing unnecessary custom iterators</a></li>
+      </ul>
+    </li>
+    <li><a href="#practical-guidance-for-java-teams">Practical Guidance for Java Teams</a></li>
+    <li><a href="#final-thoughts">Final Thoughts</a></li>
+  </ul>
+</nav>
+        </div>
+    </details>
+</div>
+
+  <div class="post-content"><h2 id="the-iterator-pattern-solves-a-traversal-encapsulation-problem">The Iterator Pattern Solves a Traversal Encapsulation Problem<a hidden class="anchor" aria-hidden="true" href="#the-iterator-pattern-solves-a-traversal-encapsulation-problem">#</a></h2>
+<p>Collections are everywhere in software systems, but traversal logic should not leak data structure internals.</p>
+<p>Without a clear iteration contract, client code often becomes tightly coupled to:</p>
+<ul>
+<li>index-based loops tied to list implementations</li>
+<li>tree traversal details embedded in services</li>
+<li>ad hoc pagination logic repeated in multiple classes</li>
+</ul>
+<p>The Iterator pattern solves this by providing a standard way to access elements sequentially without exposing the underlying representation.</p>
+<p>In Java, this is both foundational and practical. The standard <code>Iterator</code> interface is a direct embodiment of this pattern, and custom iterators remain useful for domain-specific traversal behaviors.</p>
+<hr>
+<h2 id="the-gang-of-four-intent">The Gang of Four Intent<a hidden class="anchor" aria-hidden="true" href="#the-gang-of-four-intent">#</a></h2>
+<p>The Gang of Four defines Iterator as:</p>
+<blockquote>
+<p>Provide a way to access the elements of an aggregate object sequentially without exposing its underlying representation.</p>
+</blockquote>
+<p>In practical terms:</p>
+<ul>
+<li>aggregate owns storage details</li>
+<li>iterator owns traversal behavior</li>
+<li>client consumes a stable traversal interface</li>
+</ul>
+<p>This keeps data structures replaceable and client logic cleaner.</p>
+<hr>
+<h2 id="why-teams-use-iterator-in-real-systems">Why Teams Use Iterator in Real Systems<a hidden class="anchor" aria-hidden="true" href="#why-teams-use-iterator-in-real-systems">#</a></h2>
+<p>Without iterator abstractions, callers often assume too much about collection layout.</p>
+<p>That causes:</p>
+<ul>
+<li>brittle client code when internal structures change</li>
+<li>duplicated traversal logic</li>
+<li>inconsistent filtering/ordering behavior</li>
+</ul>
+<p>With iterator-based APIs:</p>
+<ul>
+<li>traversal behavior is centralized</li>
+<li>clients depend on sequence contract, not storage mechanics</li>
+<li>internal representation can evolve safely</li>
+</ul>
+<p>This is especially useful for custom aggregates, streamed data access, and pagination abstractions.</p>
+<hr>
+<h2 id="java-example-custom-iterator-for-a-backlog-aggregate">Java Example: Custom Iterator for a Backlog Aggregate<a hidden class="anchor" aria-hidden="true" href="#java-example-custom-iterator-for-a-backlog-aggregate">#</a></h2>
+<h3 id="domain-model">Domain model<a hidden class="anchor" aria-hidden="true" href="#domain-model">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">record</span> <span class="nc">BacklogItem</span><span class="p">(</span><span class="n">String</span><span class="w"> </span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">String</span><span class="w"> </span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">priority</span><span class="p">)</span><span class="w"> </span><span class="p">{}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="aggregate">Aggregate<a hidden class="anchor" aria-hidden="true" href="#aggregate">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.ArrayList</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Iterator</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.List</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Backlog</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">Iterable</span><span class="o">&lt;</span><span class="n">BacklogItem</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">BacklogItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">items</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="n">BacklogItem</span><span class="w"> </span><span class="n">item</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">items</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="n">item</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">Iterator</span><span class="o">&lt;</span><span class="n">BacklogItem</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">iterator</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">PriorityAscendingIterator</span><span class="p">(</span><span class="n">items</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="custom-iterator">Custom iterator<a hidden class="anchor" aria-hidden="true" href="#custom-iterator">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.ArrayList</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Comparator</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Iterator</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.List</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.NoSuchElementException</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">PriorityAscendingIterator</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">Iterator</span><span class="o">&lt;</span><span class="n">BacklogItem</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">List</span><span class="o">&lt;</span><span class="n">BacklogItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">sorted</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">0</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">PriorityAscendingIterator</span><span class="p">(</span><span class="n">List</span><span class="o">&lt;</span><span class="n">BacklogItem</span><span class="o">&gt;</span><span class="w"> </span><span class="n">source</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">sorted</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayList</span><span class="o">&lt;&gt;</span><span class="p">(</span><span class="n">source</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">sorted</span><span class="p">.</span><span class="na">sort</span><span class="p">(</span><span class="n">Comparator</span><span class="p">.</span><span class="na">comparingInt</span><span class="p">(</span><span class="n">BacklogItem</span><span class="p">::</span><span class="n">priority</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">hasNext</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">index</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">sorted</span><span class="p">.</span><span class="na">size</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">BacklogItem</span><span class="w"> </span><span class="nf">next</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">hasNext</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">NoSuchElementException</span><span class="p">(</span><span class="s">&#34;No more backlog items&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">sorted</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">index</span><span class="o">++</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="usage">Usage<a hidden class="anchor" aria-hidden="true" href="#usage">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="n">Backlog</span><span class="w"> </span><span class="n">backlog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Backlog</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">backlog</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">BacklogItem</span><span class="p">(</span><span class="s">&#34;B-102&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Refactor checkout&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">3</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">backlog</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">BacklogItem</span><span class="p">(</span><span class="s">&#34;B-101&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Fix payment timeout&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">1</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="n">backlog</span><span class="p">.</span><span class="na">add</span><span class="p">(</span><span class="k">new</span><span class="w"> </span><span class="n">BacklogItem</span><span class="p">(</span><span class="s">&#34;B-103&#34;</span><span class="p">,</span><span class="w"> </span><span class="s">&#34;Improve logging&#34;</span><span class="p">,</span><span class="w"> </span><span class="n">2</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">BacklogItem</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="p">:</span><span class="w"> </span><span class="n">backlog</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">System</span><span class="p">.</span><span class="na">out</span><span class="p">.</span><span class="na">println</span><span class="p">(</span><span class="n">item</span><span class="p">.</span><span class="na">id</span><span class="p">()</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s">&#34; -&gt; priority &#34;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">item</span><span class="p">.</span><span class="na">priority</span><span class="p">());</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>Clients get ordered traversal without needing to know how ordering is implemented.</p>
+<hr>
+<h2 id="another-java-example-tree-iterator">Another Java Example: Tree Iterator<a hidden class="anchor" aria-hidden="true" href="#another-java-example-tree-iterator">#</a></h2>
+<p>Iterators are especially useful for hierarchical structures.</p>
+<h3 id="component">Component<a hidden class="anchor" aria-hidden="true" href="#component">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.List</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">interface</span> <span class="nc">OrgNode</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">String</span><span class="w"> </span><span class="nf">name</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="n">List</span><span class="o">&lt;</span><span class="n">OrgNode</span><span class="o">&gt;</span><span class="w"> </span><span class="nf">children</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><h3 id="iterator-with-depth-first-traversal">Iterator with depth-first traversal<a hidden class="anchor" aria-hidden="true" href="#iterator-with-depth-first-traversal">#</a></h3>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.ArrayDeque</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Deque</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.Iterator</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kn">import</span><span class="w"> </span><span class="nn">java.util.NoSuchElementException</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">DepthFirstOrgIterator</span><span class="w"> </span><span class="kd">implements</span><span class="w"> </span><span class="n">Iterator</span><span class="o">&lt;</span><span class="n">OrgNode</span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="kd">final</span><span class="w"> </span><span class="n">Deque</span><span class="o">&lt;</span><span class="n">OrgNode</span><span class="o">&gt;</span><span class="w"> </span><span class="n">stack</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">ArrayDeque</span><span class="o">&lt;&gt;</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="nf">DepthFirstOrgIterator</span><span class="p">(</span><span class="n">OrgNode</span><span class="w"> </span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">stack</span><span class="p">.</span><span class="na">push</span><span class="p">(</span><span class="n">root</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="nf">hasNext</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="o">!</span><span class="n">stack</span><span class="p">.</span><span class="na">isEmpty</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="nd">@Override</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="n">OrgNode</span><span class="w"> </span><span class="nf">next</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">hasNext</span><span class="p">())</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">NoSuchElementException</span><span class="p">(</span><span class="s">&#34;No more nodes&#34;</span><span class="p">);</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">OrgNode</span><span class="w"> </span><span class="n">current</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">stack</span><span class="p">.</span><span class="na">pop</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="kd">var</span><span class="w"> </span><span class="n">children</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">current</span><span class="p">.</span><span class="na">children</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kt">int</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">children</span><span class="p">.</span><span class="na">size</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">1</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">0</span><span class="p">;</span><span class="w"> </span><span class="n">i</span><span class="o">--</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">            </span><span class="n">stack</span><span class="p">.</span><span class="na">push</span><span class="p">(</span><span class="n">children</span><span class="p">.</span><span class="na">get</span><span class="p">(</span><span class="n">i</span><span class="p">));</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">current</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="p">}</span><span class="w">
+</span></span></span></code></pre></div><p>This keeps traversal behavior reusable and separate from node storage details.</p>
+<hr>
+<h2 id="external-iterator-vs-internal-iterator">External Iterator vs Internal Iterator<a hidden class="anchor" aria-hidden="true" href="#external-iterator-vs-internal-iterator">#</a></h2>
+<p>Two common styles:</p>
+<ul>
+<li><strong>External iterator</strong>: client controls iteration (<code>hasNext()/next()</code>).</li>
+<li><strong>Internal iterator</strong>: aggregate controls iteration and invokes callback/lambda.</li>
+</ul>
+<p>Java’s <code>Iterator</code> is external, while <code>forEach</code>-style APIs are internal.</p>
+<p>Use external iteration when caller needs flow control (break, resume, conditional advancement).<br>
+Use internal iteration when declarative processing is clearer.</p>
+<hr>
+<h2 id="iterator-and-fail-fast-behavior-in-java">Iterator and Fail-Fast Behavior in Java<a hidden class="anchor" aria-hidden="true" href="#iterator-and-fail-fast-behavior-in-java">#</a></h2>
+<p>Many Java collection iterators are fail-fast: if the collection is structurally modified during iteration (outside iterator methods), a <code>ConcurrentModificationException</code> may occur.</p>
+<p>This is a safety feature, not a synchronization guarantee.</p>
+<p>For concurrent mutation scenarios, use appropriate concurrent collections or snapshot iterators when semantics require stable traversal views.</p>
+<hr>
+<h2 id="iterator-vs-stream">Iterator vs Stream<a hidden class="anchor" aria-hidden="true" href="#iterator-vs-stream">#</a></h2>
+<p>In modern Java:</p>
+<ul>
+<li><strong>Iterator</strong> is imperative and stateful traversal.</li>
+<li><strong>Stream</strong> is declarative pipeline processing.</li>
+</ul>
+<p>Streams are often preferable for transformation pipelines; iterators are useful when you need custom traversal control, lazy stepping, or backward-compatible APIs.</p>
+<p>Both can coexist cleanly in mature codebases.</p>
+<hr>
+<h2 id="solid-alignment">SOLID Alignment<a hidden class="anchor" aria-hidden="true" href="#solid-alignment">#</a></h2>
+<p>Iterator aligns with SOLID principles:</p>
+<h3 id="single-responsibility-principle">Single Responsibility Principle<a hidden class="anchor" aria-hidden="true" href="#single-responsibility-principle">#</a></h3>
+<p>Aggregates manage data; iterators manage traversal mechanics.</p>
+<h3 id="openclosed-principle">Open/Closed Principle<a hidden class="anchor" aria-hidden="true" href="#openclosed-principle">#</a></h3>
+<p>You can add new traversal strategies (e.g., priority, depth-first, breadth-first) without modifying aggregate clients.</p>
+<h3 id="dependency-inversion-principle">Dependency Inversion Principle<a hidden class="anchor" aria-hidden="true" href="#dependency-inversion-principle">#</a></h3>
+<p>Clients depend on <code>Iterator</code>/<code>Iterable</code> abstractions instead of concrete data structure internals.</p>
+<p>This supports maintainable evolution of collection-heavy domains.</p>
+<hr>
+<h2 id="common-mistakes">Common Mistakes<a hidden class="anchor" aria-hidden="true" href="#common-mistakes">#</a></h2>
+<h3 id="1-exposing-mutable-internals-through-iteration">1. Exposing mutable internals through iteration<a hidden class="anchor" aria-hidden="true" href="#1-exposing-mutable-internals-through-iteration">#</a></h3>
+<p>If iterator returns mutable internal references without boundaries, encapsulation is weakened.</p>
+<h3 id="2-mixing-traversal-side-effects-into-next">2. Mixing traversal side effects into <code>next()</code><a hidden class="anchor" aria-hidden="true" href="#2-mixing-traversal-side-effects-into-next">#</a></h3>
+<p>Keep iteration mechanics predictable. Side effects should be explicit and testable.</p>
+<h3 id="3-ignoring-end-of-sequence-contracts">3. Ignoring end-of-sequence contracts<a hidden class="anchor" aria-hidden="true" href="#3-ignoring-end-of-sequence-contracts">#</a></h3>
+<p><code>next()</code> must throw <code>NoSuchElementException</code> when exhausted.</p>
+<h3 id="4-implementing-unnecessary-custom-iterators">4. Implementing unnecessary custom iterators<a hidden class="anchor" aria-hidden="true" href="#4-implementing-unnecessary-custom-iterators">#</a></h3>
+<p>Prefer built-in collections and streams unless custom traversal semantics are truly needed.</p>
+<hr>
+<h2 id="practical-guidance-for-java-teams">Practical Guidance for Java Teams<a hidden class="anchor" aria-hidden="true" href="#practical-guidance-for-java-teams">#</a></h2>
+<p>Use Iterator when:</p>
+<ul>
+<li>clients need uniform sequential access</li>
+<li>traversal logic is non-trivial or reusable</li>
+<li>internal representation should remain hidden</li>
+</ul>
+<p>Avoid custom Iterator when:</p>
+<ul>
+<li>built-in collection iteration is already enough</li>
+<li>added abstraction does not provide clear traversal value</li>
+<li>stream pipelines express the behavior more clearly</li>
+</ul>
+<p>Pattern discipline means introducing custom iterators for real traversal concerns, not for stylistic consistency.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts<a hidden class="anchor" aria-hidden="true" href="#final-thoughts">#</a></h2>
+<p>The Iterator pattern is foundational because traversal is universal, but representation should remain encapsulated.</p>
+<p>In Java, it underpins the collections ecosystem and remains valuable for domain-specific traversal strategies where simple loops are not sufficient.</p>
+<p>Used well, Iterator keeps client code decoupled from storage details and makes traversal behavior reusable and testable. Used carelessly, it can add unnecessary complexity or leak internals.</p>
+<p>The practical standard is clear:</p>
+<ul>
+<li>separate traversal from storage</li>
+<li>define predictable iterator contracts</li>
+<li>choose built-in iteration first, custom iterators when justified</li>
+<li>test traversal edge cases (empty, single, deep, concurrent mutation semantics)</li>
+</ul>
+<p>That is how you keep collection-heavy code understandable and resilient as models evolve.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://dustinwaldron.github.io/tags/architecture/">Architecture</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/engineering/">Engineering</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/java/">Java</a></li>
+      <li><a href="https://dustinwaldron.github.io/tags/best-practices/">Best Practices</a></li>
+    </ul>
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://dustinwaldron.github.io/">Dustin Waldron</a></span> · 
+
+    <span>
+        Powered by
+        <a href="https://gohugo.io/" rel="noopener noreferrer" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" aria-label="go to top" title="Go to Top (Alt + G)" class="top-link" id="top-link" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 6" fill="currentColor">
+        <path d="M12 6H0l6-6z" />
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var mybutton = document.getElementById("top-link");
+    window.onscroll = function () {
+        if (document.body.scrollTop > 800 || document.documentElement.scrollTop > 800) {
+            mybutton.style.visibility = "visible";
+            mybutton.style.opacity = "1";
+        } else {
+            mybutton.style.visibility = "hidden";
+            mybutton.style.opacity = "0";
+        }
+    };
+
+</script>
+
+</body>
+
+</html>
